@@ -27,7 +27,7 @@ sections:
           icon_pack: fas
         - name: Photography
           icon: camera-retro
-          icon_pack: fas -->
+          icon_pack: fas
   - block: experience
     content:
       title: Experience
