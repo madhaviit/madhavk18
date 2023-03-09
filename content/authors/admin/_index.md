@@ -34,9 +34,9 @@ education:
 superuser: true
 status:
   icon: ☕️
-last_name: Wu
+last_name: Kadam
 highlight_name: true
-first_name: Alice
+first_name: Madhav
 email: mkiitind@gmail.com
 ---
 Madhav is a ambitious student studying computer science at IIT Indore. He is interested in using modern innovations for social good and research required for it. He loves debating and writing poems. He is good at table tennis, carrom and chess. He is an avid reader and occasional writer deeply interested in politics and philosophy. 
