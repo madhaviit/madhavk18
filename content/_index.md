@@ -5,6 +5,7 @@ date: 2022-10-24
 type: landing
 
 sections:
+
   - block: about.avatar
     id: about
     content:
@@ -19,13 +20,16 @@ sections:
     content:
       title: Skills
       items:
-        - name: Python
-          icon: python
+        - name: R
+          description: 90%
+          icon: r-project
           icon_pack: fab
-        - name: HTML
-          icon: html5
+        - name: Statistics
+          description: 100%
+          icon: chart-line
           icon_pack: fas
         - name: Photography
+          description: 10%
           icon: camera-retro
           icon_pack: fas
   - block: experience
@@ -63,7 +67,7 @@ sections:
           description: Taught electronic engineering and researched semiconductor physics.
     design:
       columns: '2'
-   - block: accomplishments
+  - block: accomplishments
     content:
       # Note: `&shy;` is used to add a 'soft' hyphen in a long heading.
       title: 'Accomplish&shy;ments'
