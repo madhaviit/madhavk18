@@ -16,7 +16,7 @@ sections:
     design:
       # Choose how many columns the section has. Valid values: '1' or '2'.
       columns: '2'
-<!--   - block: features
+  - block: features
     content:
       title: Skills
       items:
@@ -29,7 +29,7 @@ sections:
         - name: Photography
           icon: camera-retro
           icon_pack: fas -->
-<!--   - block: experience
+  - block: experience
     content:
       title: Experience
       # Date format for experience
@@ -63,7 +63,7 @@ sections:
           date_end: '2020-12-31'
           description: Taught electronic engineering and researched semiconductor physics.
     design:
-      columns: '2' -->
+      columns: '2'
    - block: accomplishments
     content:
       # Note: `&shy;` is used to add a 'soft' hyphen in a long heading.
