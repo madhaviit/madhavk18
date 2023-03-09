@@ -13,6 +13,9 @@ sections:
       username: admin
       # Override your bio text from `authors/admin/_index.md`?
       text:
+    design:
+      # Choose how many columns the section has. Valid values: '1' or '2'.
+      columns: '2'
   - block: features
     content:
       title: Skills
