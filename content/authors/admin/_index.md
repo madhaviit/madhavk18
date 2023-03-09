@@ -1,7 +1,7 @@
 ---
 title: Madhav Kadam
 role: Computer Science Undergrad @IITI
-avatar_filename: whatsapp-image-2021-11-27-at-12.48.58_ccexpress-2-.png
+avatar_filename: avatar.png
 bio: I am wildly interested in research in Data Science and its applications.
 interests: []
 social:
