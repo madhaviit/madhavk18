@@ -11,7 +11,7 @@ image:
   focal_point: Smart
   preview_only: false
 ---
-
+# How my team representing IIT Indore bagged an absolute Gold Medal in Inter IIT Tech Meet 11.0 (2023 edition at IIT Kanpur) for the Mid-Prep "The Vital Extraction" Challenge by Cloudphysician.
 
 ## Abstract:
 
@@ -25,14 +25,13 @@ Precisely, this is the task assigned to us. This challenge required the developm
 
 ![Pipeline_fin drawio (1)](https://user-images.githubusercontent.com/122287288/217323177-4d3aa8bd-5954-4043-aba3-a0a33584d34a.png)
 
-
 We propose to solve the task with a 3-step solution, namely, Preprocessing, Vital Detection, and OCR. Lastly, we also tackled the HR Graph digitization.
 
-### Preprocessing 
+### Preprocessing
 
 First, there is the segmentation of the monitor screen and separating it from the surroundings. Secondly, we have to scale the segmented screen to a uniform size for later stages while preserving the original resolution as much as possible. We apply the perspective transformation on the segmented image to obtain the resultant image.
 
-### Vital Detection 
+### Vital Detection
 
 This stage in the pipeline aims to detect the appropriate vitals in the cropped and transformed monitor screen. However, there was a lot of unlabelled data, and manually annotating all 9000 images was not an option. And it will never be a good solution in any real-world scenario. We identified two methods to deal with the vast amount of unlabelled data. 
 
@@ -40,13 +39,13 @@ One approach was to use a customized Semi-Supervised Learning Model, which would
 
 Another approach was to intelligently pick and manually annotate a small amount of unlabelled data and then add it to the training dataset in order to bring maximum diversity and representation to the training data without much effort. This approach was chosen because of its better results and lesser computational requirement.
 
-### OCR 
+### OCR
+
 Finally, we applied an OCR to extract the values of the vitals. This was not a particularly difficult task considering the standardized fonts used on patient monitors. However, there were a few misreads in the final result, such as “0” being read as “o” or “O”, “1” being read as “I”, etc. Due to some detection inaccuracies, we would also see brackets creep into the detection box. Due to segmentation faults, sometimes the numbers at the left corner of the screen, most usually the Systolic pressure in monitors which display it at the bottom left, lose the hundreds’ place digit. We fix such issues by hard-coding a few logic-based checks and corrections to get the most logical possibility for the correct value.
 
-### HR Graph Digitization 
+### HR Graph Digitization
 
 Initially, we converted the HR graph segmented image into binary. In order to selectively obtain only the graph, the longest connected pixels row-wise were saved, and the rest discarded. The 2-D binary image was then projected into a 1-D Time Series. The plot was further rescaled in the x and y variables.
-
 
 ## Models Used:
 
@@ -60,33 +59,33 @@ OCR of vitals: We use Paddle OCR because of its accuracy and speed.
 
 ### Segmentation model metrics:
 
-| Model | Epochs | Box Precision | Box Recall | mAP50 | mAP50-95 |
-|---|---|---|---|---|---|
-| YOLOv8n | 30 | 1 | 1 | 0.995 | 0.987 |
-| YOLOv8s | 85 | 1 | 1 | 0.995 | 0.987 |
-| Mask RCNN | 250 |  |  | 0.99 | 0.918 |
+| Model     | Epochs | Box Precision | Box Recall | mAP50 | mAP50-95 |
+| --------- | ------ | ------------- | ---------- | ----- | -------- |
+| YOLOv8n   | 30     | 1             | 1          | 0.995 | 0.987    |
+| YOLOv8s   | 85     | 1             | 1          | 0.995 | 0.987    |
+| Mask RCNN | 250    |               |            | 0.99  | 0.918    |
 
-| Model | Epochs | IOU Loss | Mean Accuracy | Mean IOU |
-|---|---|---|---|---|
-| Segformer | 35 | 0.011 | 0.992 | 0.985 |
+| Model     | Epochs | IOU Loss | Mean Accuracy | Mean IOU |
+| --------- | ------ | -------- | ------------- | -------- |
+| Segformer | 35     | 0.011    | 0.992         | 0.985    |
 
 ### Detection model metrics:
 
-| Model | Epochs | Box Precision | Box Recall | mAP50 | mAP50-95 |
-|---|---|---|---|---|---|
-| YOLOv8n | 25 | 0.986 | 0.993 | 0.99 | 0.831 |
-| YOLOv8s | 100 | 0.983 | 0.989 | 0.988 | 0.849 |
-| YOLOv8m | 100 | 0.981 | 0.988 | 0.989 | 0.841 |
-| YOLOv7 (R) |  | 0.991 | 0.996 | 0.993 | 0.83 |
-| YOLOv6 | 200 |  |  | 0.954 | 0.721 |
-| DETR | 45 |  |  | 0.979 | 0.688 |
-| RetinaNet | 20 |  |  | 0.595 | 0.286 |
+| Model      | Epochs | Box Precision | Box Recall | mAP50 | mAP50-95 |
+| ---------- | ------ | ------------- | ---------- | ----- | -------- |
+| YOLOv8n    | 25     | 0.986         | 0.993      | 0.99  | 0.831    |
+| YOLOv8s    | 100    | 0.983         | 0.989      | 0.988 | 0.849    |
+| YOLOv8m    | 100    | 0.981         | 0.988      | 0.989 | 0.841    |
+| YOLOv7 (R) |        | 0.991         | 0.996      | 0.993 | 0.83     |
+| YOLOv6     | 200    |               |            | 0.954 | 0.721    |
+| DETR       | 45     |               |            | 0.979 | 0.688    |
+| RetinaNet  | 20     |               |            | 0.595 | 0.286    |
 
 ### Optical Character Recognition
 
-| Model | Accuracy | Dataset | Inference Time |
-|---|---|---|---|
-| PaddleOCR | 74.80 | ICDAR15 | 8.54ms (per image) |
+| Model     | Accuracy | Dataset | Inference Time     |
+| --------- | -------- | ------- | ------------------ |
+| PaddleOCR | 74.80    | ICDAR15 | 8.54ms (per image) |
 
 ## Some other novel techniques we have tried:
 
@@ -98,7 +97,6 @@ This follows the use of the brown colour filter followed by a grey colour filter
 The problem with this approach, however, is that this generates a bounding box that would contain a tilted monitor screen for certain images. The tilted perspective caused a loss of accuracy which was not a favorable trade-off.
 
 ![WhatsApp Image 2023-02-07 at 23 32 42](https://user-images.githubusercontent.com/122287288/217328716-84db5210-7af1-450a-be77-16020414ee41.jpeg)
-
 
 ## Applying object detection for corners on semantic segmentation
 
@@ -112,11 +110,8 @@ We added around 800 labelled images with the help of the SCAN algorithm. SCAN (S
 
 We first made an embedding of images by training an encoder. After that, we found the nearest neighbour of each image and trained a model to find the clusters in the embedding. Finally, we took some images from each of the clusters and added them to our training dataset for better training.
 
-
 ## Semi-supervised Learning:
 
 Semi-supervised learning is an efficient way to label unlabeled data. We first train an object detection model using available labelled data in this approach. Then, we make a copy of the trained model. One model is defined as the teacher model and the other one as the student. We pick a batch of unlabeled data and let the teacher model make predictions on this data. Now, the confident predictions (confidence value above a certain threshold) among these are assigned as Pseudo Labels. The student model is trained using an augmented version of these confident images and pseudo labels set as the target labels. The student model is allowed to train for 10 epochs. After 10 epochs, the weights of the teacher model are updated by the student model by Exponential Moving Average (EMA), and the process repeats. This way, the available unlabeled data is used to improve the model, which was already trained on available labelled data.
 
 ![SSL_fin drawio (1)](https://user-images.githubusercontent.com/122287288/217329013-482772e5-eb84-4c75-bac3-116c6434e1e5.png)
-
-
