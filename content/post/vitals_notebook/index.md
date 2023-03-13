@@ -1,16 +1,12 @@
 ---
 title: Code for inference in Vitals Extraction Chaallenge
-subtitle: In this notebook my team explains how to use our pipeline for getting infernece.
+subtitle: In this notebook my team explains how to use our pipeline for getting
+  infernece.
 date: 2023-03-11
-
-# Put any other Academic metadata here...
 ---
-
-
-
+# In this notebook my team explains how to use our pipeline for getting infernece.
 
 # Imports Section
-
 
 ```python
 !pip install ultralytics
@@ -22,13 +18,9 @@ import cv2 as cv
 !pip install paddlepaddle
 import matplotlib.pyplot as plt 
 from paddleocr import PaddleOCR,draw_ocr
-
 ```
 
 # Helper Function Definition
-
-
-
 
 ```python
 # Orders points in a particular way
@@ -52,6 +44,7 @@ def order_points(pts, x, y):
 ```
 
 # Inference Function
+
 Extract the model files from the zip files, and upload to colab.
 
 Then add the filepaths.
@@ -62,7 +55,6 @@ det_path should contain the path to the weights of the detection model.
 
 Run the below cell to load models. Then the inference function can be used.
 
-
 ```python
 seg_model=YOLO('')
 det_model=YOLO('')
@@ -70,9 +62,9 @@ name_dict=det_model.names
 ocr=PaddleOCR(use_angle_cls=True,lang='en')
 ```
 
-    Namespace(benchmark=False, cls_batch_num=6, cls_image_shape='3, 48, 192', cls_model_dir='/root/.paddleocr/2.2/ocr/cls/ch_ppocr_mobile_v2.0_cls_infer', cls_thresh=0.9, cpu_threads=10, det=True, det_algorithm='DB', det_db_box_thresh=0.5, det_db_score_mode='fast', det_db_thresh=0.3, det_db_unclip_ratio=1.6, det_east_cover_thresh=0.1, det_east_nms_thresh=0.2, det_east_score_thresh=0.8, det_limit_side_len=960, det_limit_type='max', det_model_dir='/root/.paddleocr/2.2/ocr/det/en/en_ppocr_mobile_v2.0_det_infer', det_sast_nms_thresh=0.2, det_sast_polygon=False, det_sast_score_thresh=0.5, drop_score=0.5, e2e_algorithm='PGNet', e2e_char_dict_path='./ppocr/utils/ic15_dict.txt', e2e_limit_side_len=768, e2e_limit_type='max', e2e_model_dir=None, e2e_pgnet_mode='fast', e2e_pgnet_polygon=True, e2e_pgnet_score_thresh=0.5, e2e_pgnet_valid_set='totaltext', enable_mkldnn=False, gpu_mem=500, help='==SUPPRESS==', image_dir=None, ir_optim=True, label_list=['0', '180'], lang='en', layout_path_model='lp://PubLayNet/ppyolov2_r50vd_dcn_365e_publaynet/config', max_batch_size=10, max_text_length=25, min_subgraph_size=10, output='./output/table', precision='fp32', process_id=0, rec=True, rec_algorithm='CRNN', rec_batch_num=6, rec_char_dict_path='/usr/local/lib/python3.8/dist-packages/paddleocr/ppocr/utils/en_dict.txt', rec_char_type='ch', rec_image_shape='3, 32, 320', rec_model_dir='/root/.paddleocr/2.2/ocr/rec/en/en_number_mobile_v2.0_rec_infer', save_log_path='./log_output/', show_log=True, table_char_dict_path=None, table_char_type='en', table_max_len=488, table_model_dir=None, total_process_num=1, type='ocr', use_angle_cls=True, use_dilation=False, use_gpu=True, use_mp=False, use_pdserving=False, use_space_char=True, use_tensorrt=False, vis_font_path='./doc/fonts/simfang.ttf', warmup=True)
-    
-
+```
+Namespace(benchmark=False, cls_batch_num=6, cls_image_shape='3, 48, 192', cls_model_dir='/root/.paddleocr/2.2/ocr/cls/ch_ppocr_mobile_v2.0_cls_infer', cls_thresh=0.9, cpu_threads=10, det=True, det_algorithm='DB', det_db_box_thresh=0.5, det_db_score_mode='fast', det_db_thresh=0.3, det_db_unclip_ratio=1.6, det_east_cover_thresh=0.1, det_east_nms_thresh=0.2, det_east_score_thresh=0.8, det_limit_side_len=960, det_limit_type='max', det_model_dir='/root/.paddleocr/2.2/ocr/det/en/en_ppocr_mobile_v2.0_det_infer', det_sast_nms_thresh=0.2, det_sast_polygon=False, det_sast_score_thresh=0.5, drop_score=0.5, e2e_algorithm='PGNet', e2e_char_dict_path='./ppocr/utils/ic15_dict.txt', e2e_limit_side_len=768, e2e_limit_type='max', e2e_model_dir=None, e2e_pgnet_mode='fast', e2e_pgnet_polygon=True, e2e_pgnet_score_thresh=0.5, e2e_pgnet_valid_set='totaltext', enable_mkldnn=False, gpu_mem=500, help='==SUPPRESS==', image_dir=None, ir_optim=True, label_list=['0', '180'], lang='en', layout_path_model='lp://PubLayNet/ppyolov2_r50vd_dcn_365e_publaynet/config', max_batch_size=10, max_text_length=25, min_subgraph_size=10, output='./output/table', precision='fp32', process_id=0, rec=True, rec_algorithm='CRNN', rec_batch_num=6, rec_char_dict_path='/usr/local/lib/python3.8/dist-packages/paddleocr/ppocr/utils/en_dict.txt', rec_char_type='ch', rec_image_shape='3, 32, 320', rec_model_dir='/root/.paddleocr/2.2/ocr/rec/en/en_number_mobile_v2.0_rec_infer', save_log_path='./log_output/', show_log=True, table_char_dict_path=None, table_char_type='en', table_max_len=488, table_model_dir=None, total_process_num=1, type='ocr', use_angle_cls=True, use_dilation=False, use_gpu=True, use_mp=False, use_pdserving=False, use_space_char=True, use_tensorrt=False, vis_font_path='./doc/fonts/simfang.ttf', warmup=True)
+```
 
 ```python
 # The function below takes in a path to an image, or a numpy array and returns a dictionary with the values read from the image
@@ -165,7 +157,6 @@ def inference(image):
 
 # HR digitization function
 
-
 ```python
 # HR digitization. This function takes in a numpy array of the HR graph image. The Class function method below will take in an image of the monitor and give graph as well as inference.
 def digitize(img):
@@ -237,17 +228,16 @@ def digitize(img):
 
 Imgpath should contain path to image
 
-
 ```python
 inf=inference('')
 print(inf)
 ```
 
-    {'SPO2': '100', 'HR': '81', 'SBP': '131', 'DBP': '83', 'MAP': '94', 'RR': '12'}
-    
+```
+{'SPO2': '100', 'HR': '81', 'SBP': '131', 'DBP': '83', 'MAP': '94', 'RR': '12'}
+```
 
 # Class for inference
-
 
 ```python
 class extraction:
@@ -436,12 +426,10 @@ class extraction:
     plt.xlabel('Time (sec)',size=20)
     plt.ylabel('Heart rate Voltage (mV)',size=20)
     plt.grid()
-
-
-
 ```
 
 # How to Use:
+
 First, create an object as follows (Run the below cell) :
 
 This step will take some time, it will load the weights and download weights for the OCR model.
@@ -453,7 +441,6 @@ seg_path should contain the path to the weights of the segmentation model.
 
 det_path should contain the path to the weights of the detection model.
 
-
 ```python
 seg_path=''
 det_path=''
@@ -462,13 +449,13 @@ det_path=''
 extr = extraction(seg_path, det_path)
 ```
 
-    Namespace(benchmark=False, cls_batch_num=6, cls_image_shape='3, 48, 192', cls_model_dir='/root/.paddleocr/2.2/ocr/cls/ch_ppocr_mobile_v2.0_cls_infer', cls_thresh=0.9, cpu_threads=10, det=True, det_algorithm='DB', det_db_box_thresh=0.5, det_db_score_mode='fast', det_db_thresh=0.3, det_db_unclip_ratio=1.6, det_east_cover_thresh=0.1, det_east_nms_thresh=0.2, det_east_score_thresh=0.8, det_limit_side_len=960, det_limit_type='max', det_model_dir='/root/.paddleocr/2.2/ocr/det/en/en_ppocr_mobile_v2.0_det_infer', det_sast_nms_thresh=0.2, det_sast_polygon=False, det_sast_score_thresh=0.5, drop_score=0.5, e2e_algorithm='PGNet', e2e_char_dict_path='./ppocr/utils/ic15_dict.txt', e2e_limit_side_len=768, e2e_limit_type='max', e2e_model_dir=None, e2e_pgnet_mode='fast', e2e_pgnet_polygon=True, e2e_pgnet_score_thresh=0.5, e2e_pgnet_valid_set='totaltext', enable_mkldnn=False, gpu_mem=500, help='==SUPPRESS==', image_dir=None, ir_optim=True, label_list=['0', '180'], lang='en', layout_path_model='lp://PubLayNet/ppyolov2_r50vd_dcn_365e_publaynet/config', max_batch_size=10, max_text_length=25, min_subgraph_size=10, output='./output/table', precision='fp32', process_id=0, rec=True, rec_algorithm='CRNN', rec_batch_num=6, rec_char_dict_path='/usr/local/lib/python3.8/dist-packages/paddleocr/ppocr/utils/en_dict.txt', rec_char_type='ch', rec_image_shape='3, 32, 320', rec_model_dir='/root/.paddleocr/2.2/ocr/rec/en/en_number_mobile_v2.0_rec_infer', save_log_path='./log_output/', show_log=True, table_char_dict_path=None, table_char_type='en', table_max_len=488, table_model_dir=None, total_process_num=1, type='ocr', use_angle_cls=True, use_dilation=False, use_gpu=True, use_mp=False, use_pdserving=False, use_space_char=True, use_tensorrt=False, vis_font_path='./doc/fonts/simfang.ttf', warmup=True)
-    
+```
+Namespace(benchmark=False, cls_batch_num=6, cls_image_shape='3, 48, 192', cls_model_dir='/root/.paddleocr/2.2/ocr/cls/ch_ppocr_mobile_v2.0_cls_infer', cls_thresh=0.9, cpu_threads=10, det=True, det_algorithm='DB', det_db_box_thresh=0.5, det_db_score_mode='fast', det_db_thresh=0.3, det_db_unclip_ratio=1.6, det_east_cover_thresh=0.1, det_east_nms_thresh=0.2, det_east_score_thresh=0.8, det_limit_side_len=960, det_limit_type='max', det_model_dir='/root/.paddleocr/2.2/ocr/det/en/en_ppocr_mobile_v2.0_det_infer', det_sast_nms_thresh=0.2, det_sast_polygon=False, det_sast_score_thresh=0.5, drop_score=0.5, e2e_algorithm='PGNet', e2e_char_dict_path='./ppocr/utils/ic15_dict.txt', e2e_limit_side_len=768, e2e_limit_type='max', e2e_model_dir=None, e2e_pgnet_mode='fast', e2e_pgnet_polygon=True, e2e_pgnet_score_thresh=0.5, e2e_pgnet_valid_set='totaltext', enable_mkldnn=False, gpu_mem=500, help='==SUPPRESS==', image_dir=None, ir_optim=True, label_list=['0', '180'], lang='en', layout_path_model='lp://PubLayNet/ppyolov2_r50vd_dcn_365e_publaynet/config', max_batch_size=10, max_text_length=25, min_subgraph_size=10, output='./output/table', precision='fp32', process_id=0, rec=True, rec_algorithm='CRNN', rec_batch_num=6, rec_char_dict_path='/usr/local/lib/python3.8/dist-packages/paddleocr/ppocr/utils/en_dict.txt', rec_char_type='ch', rec_image_shape='3, 32, 320', rec_model_dir='/root/.paddleocr/2.2/ocr/rec/en/en_number_mobile_v2.0_rec_infer', save_log_path='./log_output/', show_log=True, table_char_dict_path=None, table_char_type='en', table_max_len=488, table_model_dir=None, total_process_num=1, type='ocr', use_angle_cls=True, use_dilation=False, use_gpu=True, use_mp=False, use_pdserving=False, use_space_char=True, use_tensorrt=False, vis_font_path='./doc/fonts/simfang.ttf', warmup=True)
+```
 
 Then, call the labels inference function as follows:
 
 (Imgpath is the path to the image. You can also input a numpy array.)
-
 
 ```python
 Imgpath=''
@@ -479,19 +466,14 @@ If mode ='labels', the inference function returns a dictionary with the detected
 
 If mode = 'graph', the inference function also displays the digitized HR graph while returning a dictionary. (Inference times may be slightly higher)
 
-
 ```python
 # Display Results
 results
 ```
 
-
-
-
-    {'SPO2': '100', 'SBP': '104', 'HR': '62', 'DBP': '79', 'MAP': '88', 'RR': '12'}
-
-
-
+```
+{'SPO2': '100', 'SBP': '104', 'HR': '62', 'DBP': '79', 'MAP': '88', 'RR': '12'}
+```
 
 ```python
 # Graph mode shows a graph and returns a dictionary
@@ -499,17 +481,10 @@ graph_mode=extr.inference(Imgpath, mode='graph')
 print(graph_mode)
 ```
 
-    {'SPO2': '100', 'SBP': '104', 'HR': '62', 'DBP': '79', 'MAP': '88', 'RR': '12'}
-    
+```
+{'SPO2': '100', 'SBP': '104', 'HR': '62', 'DBP': '79', 'MAP': '88', 'RR': '12'}
+```
 
-
-    
 ![png](./index_19_1.png)
-    
 
-
-
-    
 ![png](./index_19_2.png)
-    
-
