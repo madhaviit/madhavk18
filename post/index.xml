@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts | Academic</title><link>https://madhaviit.github.io/madhavk18/post/</link><atom:link href="https://madhaviit.github.io/madhavk18/post/index.xml" rel="self" type="application/rss+xml"/><description>Posts</description><generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Mon, 13 Mar 2023 10:39:21 +0000</lastBuildDate><image><url>https://madhaviit.github.io/madhavk18/media/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_3.png</url><title>Posts</title><link>https://madhaviit.github.io/madhavk18/post/</link></image><item><title>The Vital Extraction Challenge</title><link>https://madhaviit.github.io/madhavk18/post/the-vital-extraction-challenge/</link><pubDate>Mon, 13 Mar 2023 10:39:21 +0000</pubDate><guid>https://madhaviit.github.io/madhavk18/post/the-vital-extraction-challenge/</guid><description>&lt;h1 id="how-my-team-representing-iit-indore-bagged-an-absolute-gold-medal-in-inter-iit-tech-meet-110-2023-edition-at-iit-kanpur-for-the-mid-prep-the-vital-extraction-challenge-by-cloudphysician">How my team representing IIT Indore bagged an absolute Gold Medal in Inter IIT Tech Meet 11.0 (2023 edition at IIT Kanpur) for the Mid-Prep &amp;ldquo;The Vital Extraction&amp;rdquo; Challenge by Cloudphysician.&lt;/h1>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts | Academic</title><link>https://madhaviit.github.io/madhavk18/post/</link><atom:link href="https://madhaviit.github.io/madhavk18/post/index.xml" rel="self" type="application/rss+xml"/><description>Posts</description><generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Mon, 13 Mar 2023 10:39:21 +0000</lastBuildDate><image><url>https://madhaviit.github.io/madhavk18/media/icon_hua2ec155b4296a9c9791d015323e16eb5_11927_512x512_fill_lanczos_center_3.png</url><title>Posts</title><link>https://madhaviit.github.io/madhavk18/post/</link></image><item><title>The Vital Extraction Challenge</title><link>https://madhaviit.github.io/madhavk18/post/the-vital-extraction-challenge/</link><pubDate>Mon, 13 Mar 2023 10:39:21 +0000</pubDate><guid>https://madhaviit.github.io/madhavk18/post/the-vital-extraction-challenge/</guid><description>&lt;h1 id="how-my-team-representing-iit-indore-bagged-an-absolute-gold-medal-in-inter-iit-tech-meet-110-2023-edition-at-iit-kanpur-for-the-mid-prep-the-vital-extraction-challenge-by-cloudphysician">How my team representing IIT Indore bagged an absolute Gold Medal in Inter IIT Tech Meet 11.0 (2023 edition at IIT Kanpur) for the Mid-Prep &amp;ldquo;The Vital Extraction&amp;rdquo; Challenge by Cloudphysician.&lt;/h1>
 &lt;h2 id="abstract">Abstract:&lt;/h2>
 &lt;p>The vital extraction challenge aims to extract a patient&amp;rsquo;s vitals from the image of an ICU monitor. Monitoring vitals is critical to providing high-quality care to patients and is essential for ensuring the best possible patient outcomes. While current guidelines state that the nurse-to-patient ratio should be 1:6, various practical issues result in a much worse scenario. This is why it is important to find newer and more efficient solutions to help solve this problem.&lt;/p>
 &lt;p>While it would be preferable to skip the camera-based monitoring system and directly feed the vitals into a common server, we recognize the fact that this solution is not an efficient solution for ICUs around India that are already up and running. There is a need to augment the existing ICU environments in order to capture the necessary vitals from an “offline” patient monitor and feed it into an “online” server for monitoring.&lt;/p>
@@ -717,7 +717,7 @@ console.log('code block');
 &lt;p>Wowchemy supports the popular &lt;a href="https://plot.ly/" target="_blank" rel="noopener">Plotly&lt;/a> format for interactive charts.&lt;/p>
 &lt;p>Save your Plotly JSON in your page folder, for example &lt;code>line-chart.json&lt;/code>, and then add the &lt;code>{{&amp;lt; chart data=&amp;quot;line-chart&amp;quot; &amp;gt;}}&lt;/code> shortcode where you would like the chart to appear.&lt;/p>
 &lt;p>Demo:&lt;/p>
-&lt;div id="chart-976413258" class="chart">&lt;/div>
+&lt;div id="chart-269471583" class="chart">&lt;/div>
 &lt;script>
 (function() {
 let a = setInterval( function() {
@@ -726,7 +726,7 @@ return;
 }
 clearInterval( a );
 Plotly.d3.json("./line-chart.json", function(chart) {
-Plotly.plot('chart-976413258', chart.data, chart.layout, {responsive: true});
+Plotly.plot('chart-269471583', chart.data, chart.layout, {responsive: true});
 });
 }, 500 );
 })();
