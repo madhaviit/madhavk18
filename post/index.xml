@@ -1,0 +1,977 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts | Academic</title><link>https://madhaviit.github.io/post/</link><atom:link href="https://madhaviit.github.io/post/index.xml" rel="self" type="application/rss+xml"/><description>Posts</description><generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Mon, 13 Mar 2023 10:39:21 +0000</lastBuildDate><image><url>https://madhaviit.github.io/media/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_3.png</url><title>Posts</title><link>https://madhaviit.github.io/post/</link></image><item><title>The Vital Extraction Challenge</title><link>https://madhaviit.github.io/post/the-vital-extraction-challenge/</link><pubDate>Mon, 13 Mar 2023 10:39:21 +0000</pubDate><guid>https://madhaviit.github.io/post/the-vital-extraction-challenge/</guid><description>&lt;h1 id="how-my-team-representing-iit-indore-bagged-an-absolute-gold-medal-in-inter-iit-tech-meet-110-2023-edition-at-iit-kanpur-for-the-mid-prep-the-vital-extraction-challenge-by-cloudphysician">How my team representing IIT Indore bagged an absolute Gold Medal in Inter IIT Tech Meet 11.0 (2023 edition at IIT Kanpur) for the Mid-Prep &amp;ldquo;The Vital Extraction&amp;rdquo; Challenge by Cloudphysician.&lt;/h1>
+&lt;h2 id="abstract">Abstract:&lt;/h2>
+&lt;p>The vital extraction challenge aims to extract a patient&amp;rsquo;s vitals from the image of an ICU monitor. Monitoring vitals is critical to providing high-quality care to patients and is essential for ensuring the best possible patient outcomes. While current guidelines state that the nurse-to-patient ratio should be 1:6, various practical issues result in a much worse scenario. This is why it is important to find newer and more efficient solutions to help solve this problem.&lt;/p>
+&lt;p>While it would be preferable to skip the camera-based monitoring system and directly feed the vitals into a common server, we recognize the fact that this solution is not an efficient solution for ICUs around India that are already up and running. There is a need to augment the existing ICU environments in order to capture the necessary vitals from an “offline” patient monitor and feed it into an “online” server for monitoring.&lt;/p>
+&lt;p>Precisely, this is the task assigned to us. This challenge required the development of a pipeline to first detect and segment the monitor&amp;rsquo;s screen from the image and then detect, segment, and understand the various vitals present on the screen.&lt;/p>
+&lt;h2 id="pipeline">Pipeline&lt;/h2>
+&lt;p>
+&lt;figure >
+&lt;div class="d-flex justify-content-center">
+&lt;div class="w-100" >&lt;img src="https://user-images.githubusercontent.com/122287288/217323177-4d3aa8bd-5954-4043-aba3-a0a33584d34a.png" alt="Pipeline_fin drawio (1)" loading="lazy" data-zoomable />&lt;/div>
+&lt;/div>&lt;/figure>
+&lt;/p>
+&lt;p>We propose to solve the task with a 3-step solution, namely, Preprocessing, Vital Detection, and OCR. Lastly, we also tackled the HR Graph digitization.&lt;/p>
+&lt;h3 id="preprocessing">Preprocessing&lt;/h3>
+&lt;p>First, there is the segmentation of the monitor screen and separating it from the surroundings. Secondly, we have to scale the segmented screen to a uniform size for later stages while preserving the original resolution as much as possible. We apply the perspective transformation on the segmented image to obtain the resultant image.&lt;/p>
+&lt;h3 id="vital-detection">Vital Detection&lt;/h3>
+&lt;p>This stage in the pipeline aims to detect the appropriate vitals in the cropped and transformed monitor screen. However, there was a lot of unlabelled data, and manually annotating all 9000 images was not an option. And it will never be a good solution in any real-world scenario. We identified two methods to deal with the vast amount of unlabelled data.&lt;/p>
+&lt;p>One approach was to use a customized Semi-Supervised Learning Model, which would learn from the small amount of labelled data and use it to generate pseudo labels and then true labels for the unlabelled data.&lt;/p>
+&lt;p>Another approach was to intelligently pick and manually annotate a small amount of unlabelled data and then add it to the training dataset in order to bring maximum diversity and representation to the training data without much effort. This approach was chosen because of its better results and lesser computational requirement.&lt;/p>
+&lt;h3 id="ocr">OCR&lt;/h3>
+&lt;p>Finally, we applied an OCR to extract the values of the vitals. This was not a particularly difficult task considering the standardized fonts used on patient monitors. However, there were a few misreads in the final result, such as “0” being read as “o” or “O”, “1” being read as “I”, etc. Due to some detection inaccuracies, we would also see brackets creep into the detection box. Due to segmentation faults, sometimes the numbers at the left corner of the screen, most usually the Systolic pressure in monitors which display it at the bottom left, lose the hundreds’ place digit. We fix such issues by hard-coding a few logic-based checks and corrections to get the most logical possibility for the correct value.&lt;/p>
+&lt;h3 id="hr-graph-digitization">HR Graph Digitization&lt;/h3>
+&lt;p>Initially, we converted the HR graph segmented image into binary. In order to selectively obtain only the graph, the longest connected pixels row-wise were saved, and the rest discarded. The 2-D binary image was then projected into a 1-D Time Series. The plot was further rescaled in the x and y variables.&lt;/p>
+&lt;h2 id="models-used">Models Used:&lt;/h2>
+&lt;p>Segmentation: We use the YOLO v8-n model for segmentation of monitor screens from input image. It gave 0.995 mAP50 and 0.987 mAP50-95 with inference time of around 120 ms.&lt;/p>
+&lt;p>Preprocessing: The segmented image is then approximated into a quadrilateral (four points). We apply perspective transformation which brings vitals to more readable form.&lt;/p>
+&lt;p>Vital Detection: We use YOLO v8-s model for vital extraction from preprocessed image. It gave 0.988 mAP50 and 0.849 mAP50-95 with inference time of around 200 ms.&lt;/p>
+&lt;p>OCR of vitals: We use Paddle OCR because of its accuracy and speed.&lt;/p>
+&lt;h3 id="segmentation-model-metrics">Segmentation model metrics:&lt;/h3>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Model&lt;/th>
+&lt;th>Epochs&lt;/th>
+&lt;th>Box Precision&lt;/th>
+&lt;th>Box Recall&lt;/th>
+&lt;th>mAP50&lt;/th>
+&lt;th>mAP50-95&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>YOLOv8n&lt;/td>
+&lt;td>30&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>0.995&lt;/td>
+&lt;td>0.987&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>YOLOv8s&lt;/td>
+&lt;td>85&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>0.995&lt;/td>
+&lt;td>0.987&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Mask RCNN&lt;/td>
+&lt;td>250&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>0.99&lt;/td>
+&lt;td>0.918&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Model&lt;/th>
+&lt;th>Epochs&lt;/th>
+&lt;th>IOU Loss&lt;/th>
+&lt;th>Mean Accuracy&lt;/th>
+&lt;th>Mean IOU&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Segformer&lt;/td>
+&lt;td>35&lt;/td>
+&lt;td>0.011&lt;/td>
+&lt;td>0.992&lt;/td>
+&lt;td>0.985&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="detection-model-metrics">Detection model metrics:&lt;/h3>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Model&lt;/th>
+&lt;th>Epochs&lt;/th>
+&lt;th>Box Precision&lt;/th>
+&lt;th>Box Recall&lt;/th>
+&lt;th>mAP50&lt;/th>
+&lt;th>mAP50-95&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>YOLOv8n&lt;/td>
+&lt;td>25&lt;/td>
+&lt;td>0.986&lt;/td>
+&lt;td>0.993&lt;/td>
+&lt;td>0.99&lt;/td>
+&lt;td>0.831&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>YOLOv8s&lt;/td>
+&lt;td>100&lt;/td>
+&lt;td>0.983&lt;/td>
+&lt;td>0.989&lt;/td>
+&lt;td>0.988&lt;/td>
+&lt;td>0.849&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>YOLOv8m&lt;/td>
+&lt;td>100&lt;/td>
+&lt;td>0.981&lt;/td>
+&lt;td>0.988&lt;/td>
+&lt;td>0.989&lt;/td>
+&lt;td>0.841&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>YOLOv7 (R)&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>0.991&lt;/td>
+&lt;td>0.996&lt;/td>
+&lt;td>0.993&lt;/td>
+&lt;td>0.83&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>YOLOv6&lt;/td>
+&lt;td>200&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>0.954&lt;/td>
+&lt;td>0.721&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>DETR&lt;/td>
+&lt;td>45&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>0.979&lt;/td>
+&lt;td>0.688&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>RetinaNet&lt;/td>
+&lt;td>20&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>0.595&lt;/td>
+&lt;td>0.286&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="optical-character-recognition">Optical Character Recognition&lt;/h3>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Model&lt;/th>
+&lt;th>Accuracy&lt;/th>
+&lt;th>Dataset&lt;/th>
+&lt;th>Inference Time&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>PaddleOCR&lt;/td>
+&lt;td>74.80&lt;/td>
+&lt;td>ICDAR15&lt;/td>
+&lt;td>8.54ms (per image)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="some-other-novel-techniques-we-have-tried">Some other novel techniques we have tried:&lt;/h2>
+&lt;h2 id="applying-image-processing-to-extract-monitor-screen">Applying Image processing to extract monitor screen&lt;/h2>
+&lt;p>We can use the fact that the monitor is often of low saturation and is low in red and green channels to apply the filter.&lt;/p>
+&lt;p>This follows the use of the brown colour filter followed by a grey colour filter which would encompass most things in the foreground (white monitor boundaries and gray-ish and brown-ish walls and other items)
+The problem with this approach, however, is that this generates a bounding box that would contain a tilted monitor screen for certain images. The tilted perspective caused a loss of accuracy which was not a favorable trade-off.&lt;/p>
+&lt;p>
+&lt;figure >
+&lt;div class="d-flex justify-content-center">
+&lt;div class="w-100" >&lt;img src="https://user-images.githubusercontent.com/122287288/217328716-84db5210-7af1-450a-be77-16020414ee41.jpeg" alt="WhatsApp Image 2023-02-07 at 23 32 42" loading="lazy" data-zoomable />&lt;/div>
+&lt;/div>&lt;/figure>
+&lt;/p>
+&lt;h2 id="applying-object-detection-for-corners-on-semantic-segmentation">Applying object detection for corners on semantic segmentation&lt;/h2>
+&lt;p>We exploit the fact that the monitors will always be a quadrilateral to train the model on two bounding boxes, one for each of the two opposite corner points, converting the problem from semantic segmentation to object detection problem. This results in the increase in speed of our model, however, it fails in particular use cases where it is unable to detect one of the objects due to overlap problems in particular niche use-cases. Since accuracy is the priority we opt for segmentation for a minimal time trade-off.&lt;/p>
+&lt;p>
+&lt;figure >
+&lt;div class="d-flex justify-content-center">
+&lt;div class="w-100" >&lt;img src="https://user-images.githubusercontent.com/122287288/217328932-df292937-9954-4359-93f0-1ee30de3e36d.jpeg" alt="WhatsApp Image 2023-02-07 at 23 32 50" loading="lazy" data-zoomable />&lt;/div>
+&lt;/div>&lt;/figure>
+&lt;/p>
+&lt;h2 id="additional-annotation">Additional Annotation&lt;/h2>
+&lt;p>We added around 800 labelled images with the help of the SCAN algorithm. SCAN (Semantic Clustering by Adopting Nearest-neighbour) is an unsupervised learning technique for image clustering.&lt;/p>
+&lt;p>We first made an embedding of images by training an encoder. After that, we found the nearest neighbour of each image and trained a model to find the clusters in the embedding. Finally, we took some images from each of the clusters and added them to our training dataset for better training.&lt;/p>
+&lt;h2 id="semi-supervised-learning">Semi-supervised Learning:&lt;/h2>
+&lt;p>Semi-supervised learning is an efficient way to label unlabeled data. We first train an object detection model using available labelled data in this approach. Then, we make a copy of the trained model. One model is defined as the teacher model and the other one as the student. We pick a batch of unlabeled data and let the teacher model make predictions on this data. Now, the confident predictions (confidence value above a certain threshold) among these are assigned as Pseudo Labels. The student model is trained using an augmented version of these confident images and pseudo labels set as the target labels. The student model is allowed to train for 10 epochs. After 10 epochs, the weights of the teacher model are updated by the student model by Exponential Moving Average (EMA), and the process repeats. This way, the available unlabeled data is used to improve the model, which was already trained on available labelled data.&lt;/p>
+&lt;p>
+&lt;figure >
+&lt;div class="d-flex justify-content-center">
+&lt;div class="w-100" >&lt;img src="https://user-images.githubusercontent.com/122287288/217329013-482772e5-eb84-4c75-bac3-116c6434e1e5.png" alt="SSL_fin drawio (1)" loading="lazy" data-zoomable />&lt;/div>
+&lt;/div>&lt;/figure>
+&lt;/p></description></item><item><title>Code for inference in Vitals Extraction Chaallenge</title><link>https://madhaviit.github.io/post/vitals_notebook/</link><pubDate>Sat, 11 Mar 2023 00:00:00 +0000</pubDate><guid>https://madhaviit.github.io/post/vitals_notebook/</guid><description>&lt;h1 id="in-this-notebook-my-team-explains-how-to-use-our-pipeline-for-getting-infernece">In this notebook my team explains how to use our pipeline for getting infernece.&lt;/h1>
+&lt;h1 id="imports-section">Imports Section&lt;/h1>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">ultralytics&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">ultralytics&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">ultralytics&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">YOLO&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">numpy&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">np&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">cv2&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">cv&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="s2">&amp;#34;paddleocr==2.2&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">paddlepaddle&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">matplotlib.pyplot&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">plt&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">paddleocr&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">PaddleOCR&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">draw_ocr&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="helper-function-definition">Helper Function Definition&lt;/h1>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Orders points in a particular way&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">order_points&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pts&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">y&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">zeros&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="mi">4&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">2&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">dtype&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;float32&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">s&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pts&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">sum&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">axis&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">2&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pts&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">argmin&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">)]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pts&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">argmax&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">)]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">diff&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">diff&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">pts&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">axis&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">2&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pts&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">argmin&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">diff&lt;/span>&lt;span class="p">)]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pts&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">argmax&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">diff&lt;/span>&lt;span class="p">)]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">-=&lt;/span>&lt;span class="mi">5&lt;/span> &lt;span class="c1">#if rect[0][0]&amp;gt;=5 else rect[0][0]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">-=&lt;/span>&lt;span class="mi">5&lt;/span> &lt;span class="c1">#if rect[0][1]&amp;gt;=5 else rect[0][1]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">+=&lt;/span>&lt;span class="mi">5&lt;/span> &lt;span class="c1">#if rect[2][0]&amp;lt;=x-5 else rect[2][0]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">+=&lt;/span>&lt;span class="mi">5&lt;/span> &lt;span class="c1">#if rect[2][1]&amp;lt;=y-5 else rect[2][1]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">+=&lt;/span>&lt;span class="mi">5&lt;/span> &lt;span class="c1">#if rect[1][0]&amp;lt;=x-5 else rect[1][0]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">-=&lt;/span>&lt;span class="mi">5&lt;/span> &lt;span class="c1">#if rect[1][1]&amp;gt;=5 else rect[1][1]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">-=&lt;/span>&lt;span class="mi">5&lt;/span> &lt;span class="c1">#if rect[3][0]&amp;gt;=5 else rect[3][0]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">rect&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">+=&lt;/span>&lt;span class="mi">5&lt;/span> &lt;span class="c1">#if rect[3][1]&amp;lt;=y-5 else rect[3][1]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="n">rect&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="inference-function">Inference Function&lt;/h1>
+&lt;p>Extract the model files from the zip files, and upload to colab.&lt;/p>
+&lt;p>Then add the filepaths.&lt;/p>
+&lt;p>seg_path should contain the path to the weights of the segmentation model.&lt;/p>
+&lt;p>det_path should contain the path to the weights of the detection model.&lt;/p>
+&lt;p>Run the below cell to load models. Then the inference function can be used.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">seg_model&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">YOLO&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">det_model&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">YOLO&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">name_dict&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">det_model&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">names&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ocr&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">PaddleOCR&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">use_angle_cls&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">lang&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;en&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">Namespace(benchmark=False, cls_batch_num=6, cls_image_shape=&amp;#39;3, 48, 192&amp;#39;, cls_model_dir=&amp;#39;/root/.paddleocr/2.2/ocr/cls/ch_ppocr_mobile_v2.0_cls_infer&amp;#39;, cls_thresh=0.9, cpu_threads=10, det=True, det_algorithm=&amp;#39;DB&amp;#39;, det_db_box_thresh=0.5, det_db_score_mode=&amp;#39;fast&amp;#39;, det_db_thresh=0.3, det_db_unclip_ratio=1.6, det_east_cover_thresh=0.1, det_east_nms_thresh=0.2, det_east_score_thresh=0.8, det_limit_side_len=960, det_limit_type=&amp;#39;max&amp;#39;, det_model_dir=&amp;#39;/root/.paddleocr/2.2/ocr/det/en/en_ppocr_mobile_v2.0_det_infer&amp;#39;, det_sast_nms_thresh=0.2, det_sast_polygon=False, det_sast_score_thresh=0.5, drop_score=0.5, e2e_algorithm=&amp;#39;PGNet&amp;#39;, e2e_char_dict_path=&amp;#39;./ppocr/utils/ic15_dict.txt&amp;#39;, e2e_limit_side_len=768, e2e_limit_type=&amp;#39;max&amp;#39;, e2e_model_dir=None, e2e_pgnet_mode=&amp;#39;fast&amp;#39;, e2e_pgnet_polygon=True, e2e_pgnet_score_thresh=0.5, e2e_pgnet_valid_set=&amp;#39;totaltext&amp;#39;, enable_mkldnn=False, gpu_mem=500, help=&amp;#39;==SUPPRESS==&amp;#39;, image_dir=None, ir_optim=True, label_list=[&amp;#39;0&amp;#39;, &amp;#39;180&amp;#39;], lang=&amp;#39;en&amp;#39;, layout_path_model=&amp;#39;lp://PubLayNet/ppyolov2_r50vd_dcn_365e_publaynet/config&amp;#39;, max_batch_size=10, max_text_length=25, min_subgraph_size=10, output=&amp;#39;./output/table&amp;#39;, precision=&amp;#39;fp32&amp;#39;, process_id=0, rec=True, rec_algorithm=&amp;#39;CRNN&amp;#39;, rec_batch_num=6, rec_char_dict_path=&amp;#39;/usr/local/lib/python3.8/dist-packages/paddleocr/ppocr/utils/en_dict.txt&amp;#39;, rec_char_type=&amp;#39;ch&amp;#39;, rec_image_shape=&amp;#39;3, 32, 320&amp;#39;, rec_model_dir=&amp;#39;/root/.paddleocr/2.2/ocr/rec/en/en_number_mobile_v2.0_rec_infer&amp;#39;, save_log_path=&amp;#39;./log_output/&amp;#39;, show_log=True, table_char_dict_path=None, table_char_type=&amp;#39;en&amp;#39;, table_max_len=488, table_model_dir=None, total_process_num=1, type=&amp;#39;ocr&amp;#39;, use_angle_cls=True, use_dilation=False, use_gpu=True, use_mp=False, use_pdserving=False, use_space_char=True, use_tensorrt=False, vis_font_path=&amp;#39;./doc/fonts/simfang.ttf&amp;#39;, warmup=True)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># The function below takes in a path to an image, or a numpy array and returns a dictionary with the values read from the image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">inference&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">name_dict&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">det_model&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">names&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Initialize dictionaries&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">confidence&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="s2">&amp;#34;HR&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;RR&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;DBP&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;SPO2&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;MAP&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;HR_W&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">isinstance&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nb">str&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">img&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imread&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">elif&lt;/span> &lt;span class="nb">isinstance&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ndarray&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">img&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Get segmentation predictions&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">results&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">seg_model&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">predict&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">verbose&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># If segmention masks returned are not empty (i.e if image is not already segmented)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">results&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">])&lt;/span>&lt;span class="o">!=&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Get segments and crop image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">t&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">results&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">masks&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">segments&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">t&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">array&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">t&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">t&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">][:,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">t&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">][:,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">t&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">][:,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">t&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">][:,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">c&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">int32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">t&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">reshape&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Approximate segmentation segments with a quadrilateral&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">u&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">approxPolyDP&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">c&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mf">0.04&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">arcLength&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">c&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Order corners of the quadrilateral in a particular order&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">u&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">order_points&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">u&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">size_x&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">720&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">size_y&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">512&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pts2&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">float32&lt;/span>&lt;span class="p">([[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="n">size_x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">],[&lt;/span>&lt;span class="n">size_x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">size_y&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">size_y&lt;/span>&lt;span class="p">]])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Apply perspective transform on the image to get an image to perform detection on&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">matrix&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">getPerspectiveTransform&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">u&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">astype&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">float32&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pts2&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">seg&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">warpPerspective&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">matrix&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">size_x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">size_y&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># If the image is already segmented then just run the image through detection&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">else&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">seg&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">img&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Perform detetection with the detection model&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">det&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">det_model&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">predict&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">seg&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">verbose&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">boxes&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">detxy&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">det&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">xyxy&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">numpy&lt;/span>&lt;span class="p">())&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">astype&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">int32&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">detcls&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">det&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cls&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">numpy&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">astype&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">int32&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">detconf&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">det&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">conf&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">numpy&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Iterate over regions of interest detected and acquire OCR results, use highest confidence for each class&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">j&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">enumerate&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">detcls&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">name_dict&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">!=&lt;/span>&lt;span class="s1">&amp;#39;HR_W&amp;#39;&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">confidence&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">name_dict&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">]]&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">detconf&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">]:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">bb&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">seg&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">detxy&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]:&lt;/span>&lt;span class="n">detxy&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">detxy&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]:&lt;/span> &lt;span class="n">detxy&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">]]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ocrres&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">ocr&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ocr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">bb&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="bp">cls&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">det&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rec&lt;/span>&lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">procres&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">ocrres&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">confidence&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">name_dict&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">]]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">detconf&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">ocrres&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="mf">0.6&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Process OCR result to correct some faults&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pred&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">char&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">procres&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">ord&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">char&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">&amp;gt;=&lt;/span>&lt;span class="nb">ord&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;0&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="nb">ord&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">char&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">&amp;lt;=&lt;/span>&lt;span class="nb">ord&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;9&amp;#39;&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pred&lt;/span>&lt;span class="o">+=&lt;/span>&lt;span class="n">char&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">char&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="s1">&amp;#39;A&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pred&lt;/span>&lt;span class="o">+=&lt;/span>&lt;span class="s1">&amp;#39;4&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">char&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="s1">&amp;#39;T&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pred&lt;/span>&lt;span class="o">+=&lt;/span>&lt;span class="s1">&amp;#39;7&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">char&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="s1">&amp;#39;O&amp;#39;&lt;/span>&lt;span class="ow">or&lt;/span> &lt;span class="n">char&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="s1">&amp;#39;o&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pred&lt;/span>&lt;span class="o">+=&lt;/span>&lt;span class="s1">&amp;#39;0&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">name_dict&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">]]&lt;/span>&lt;span class="o">=&lt;/span> &lt;span class="n">pred&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Applying checks to correct common faults&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">try&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">!=&lt;/span>&lt;span class="kc">None&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">try&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">])&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="mi">50&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">],&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;RR&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;RR&amp;#39;&lt;/span>&lt;span class="p">],&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">except&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">None&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">else&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;RR&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">!=&lt;/span>&lt;span class="kc">None&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;RR&amp;#39;&lt;/span>&lt;span class="p">])&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="mi">50&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">],&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;RR&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;RR&amp;#39;&lt;/span>&lt;span class="p">],&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">!=&lt;/span> &lt;span class="kc">None&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">try&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">])&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="mi">50&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;1&amp;#39;&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">except&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">None&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">!=&lt;/span> &lt;span class="kc">None&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;DBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">!=&lt;/span>&lt;span class="kc">None&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">try&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;DBP&amp;#39;&lt;/span>&lt;span class="p">])&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;DBP&amp;#39;&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="s1">&amp;#39;1&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;DBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;DBP&amp;#39;&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">:]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">except&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;DBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">None&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">except&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">pass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="n">labels&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="hr-digitization-function">HR digitization function&lt;/h1>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># HR digitization. This function takes in a numpy array of the HR graph image. The Class function method below will take in an image of the monitor and give graph as well as inference.&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">def&lt;/span> &lt;span class="nf">digitize&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># convert the input image to grayscale&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">gray&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cvtColor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">COLOR_BGR2GRAY&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># apply thresholding to convert grayscale to binary image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ret&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">thresh&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">threshold&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">gray&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">120&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">255&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># convert BGR to RGB to display using matplotlib&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">imgRGB&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cvtColor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">COLOR_BGR2RGB&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="c1"># display Original, Grayscale and Binary Images&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">Npixels_rate&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">Npixels_time&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thresh&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">#Selecting the longest chain of connected components&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">length_subarray&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">col&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">Npixels_rate&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">length_subarray&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">where&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thresh&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">col&lt;/span>&lt;span class="p">,:]&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mi">255&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">max_index&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">max&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">i&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">max_index&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">]):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">min_val&lt;/span>&lt;span class="o">=&lt;/span> &lt;span class="nb">min&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="n">max_index&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">min_index&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">min&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="n">max_index&lt;/span>&lt;span class="p">]))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">new_length_subarray&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">j&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">min_index&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">new_length_subarray&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">thresh_crop&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">thresh&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">min_index&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="n">Npixels_time&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">new_rate&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">new_time&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thresh_crop&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">#Extract the time series (not the scale bars) by starting in the first column&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">col_in_time_series&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">False&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">s1rate_pixelss&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">col&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">col&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">Npixels_time&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">where&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thresh_crop&lt;/span>&lt;span class="p">[:,&lt;/span>&lt;span class="n">col&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mi">255&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">s1rate_pixelss&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">mean&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">where&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thresh_crop&lt;/span>&lt;span class="p">[:,&lt;/span>&lt;span class="n">col&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mi">255&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">s1rate_pixelss&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">array&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">s1rate_pixelss&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Visualize time series&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">figure&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">figsize&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">12&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mf">3.8&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">s1rate_pixelss&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="s1">&amp;#39;k&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">xlim&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">Npixels_time&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ylim&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="n">new_rate&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">xlabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Time (pixels)&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">size&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">20&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ylabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Heart rate Voltage(pixels)&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">size&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">20&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Time Series Signal of HR&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">grid&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Scaling the heart rate voltage&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">s1rate&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">s1rate_pixelss&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mf">0.2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Convert time from pixels to ms&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pixels&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">arange&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">s1rate_pixelss&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">t&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pixels&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mf">0.02&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Visualize re-scaled time series&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">figure&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">figsize&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">12&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">s1rate&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="s1">&amp;#39;k&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">gca&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">invert_yaxis&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Scaled Time Series Signal of HR&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">xlabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Time (sec)&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">size&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">20&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ylabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Heart rate Voltage (mV)&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">size&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">20&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">grid&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Imgpath should contain path to image&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">inf&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">inference&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">inf&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">{&amp;#39;SPO2&amp;#39;: &amp;#39;100&amp;#39;, &amp;#39;HR&amp;#39;: &amp;#39;81&amp;#39;, &amp;#39;SBP&amp;#39;: &amp;#39;131&amp;#39;, &amp;#39;DBP&amp;#39;: &amp;#39;83&amp;#39;, &amp;#39;MAP&amp;#39;: &amp;#39;94&amp;#39;, &amp;#39;RR&amp;#39;: &amp;#39;12&amp;#39;}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="class-for-inference">Class for inference&lt;/h1>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="k">class&lt;/span> &lt;span class="nc">extraction&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Object initialization&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">def&lt;/span> &lt;span class="fm">__init__&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="bp">self&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">seg_path&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">det_path&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">seg_model&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">YOLO&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">seg_path&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">det_model&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">YOLO&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">det_path&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">name_dict&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">det_model&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">names&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ocr&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">PaddleOCR&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">use_angle_cls&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">lang&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;en&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Inference function&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># The function below takes in a path to an image, or a numpy array and returns a dictionary with the values read from the image.&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">def&lt;/span> &lt;span class="nf">inference&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="bp">self&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">image&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">mode&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;labels&amp;#39;&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Initialize dictionaries&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">confidence&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="s2">&amp;#34;HR&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;RR&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;DBP&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;SPO2&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;MAP&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s1">&amp;#39;HR_W&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">isinstance&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nb">str&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">img&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">imread&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">elif&lt;/span> &lt;span class="nb">isinstance&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">image&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ndarray&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">img&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Get segmentation predictions&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">results&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">seg_model&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">predict&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">verbose&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># If segmention masks returned are not empty (i.e if image is not already segmented)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">results&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">])&lt;/span>&lt;span class="o">!=&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Get segments and crop image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">t&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">results&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">masks&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">segments&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">t&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">array&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">t&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">t&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">][:,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">t&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">][:,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">t&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">][:,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">t&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">][:,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">c&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">int32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">t&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">reshape&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Approximate segmentation segments with a quadrilateral&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">u&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">approxPolyDP&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">c&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mf">0.04&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">arcLength&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">c&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Order corners of the quadrilateral in a particular order&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">u&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">order_points&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">u&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">size_x&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">720&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">size_y&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">512&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pts2&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">float32&lt;/span>&lt;span class="p">([[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="n">size_x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">],[&lt;/span>&lt;span class="n">size_x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">size_y&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">size_y&lt;/span>&lt;span class="p">]])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Apply perspective transform on the image to get an image to perform detection on&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">matrix&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">getPerspectiveTransform&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">u&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">astype&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">float32&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="n">pts2&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">seg&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">warpPerspective&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">matrix&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">size_x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">size_y&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># If the image is already segmented then just run the image through detection&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">else&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">seg&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">img&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Perform detetection with the detection model&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">det&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">det_model&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">predict&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">seg&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">verbose&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">boxes&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">detxy&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">det&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">xyxy&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">numpy&lt;/span>&lt;span class="p">())&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">astype&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">int32&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">detcls&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">det&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cls&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">numpy&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">astype&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">int32&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">detconf&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">det&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">conf&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">numpy&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Iterate over regions of interest detected and acquire OCR results if mode=&amp;#39;labels&amp;#39;, else if mode= &amp;#39;graphs&amp;#39; plots a graph, use highest confidence for each class&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">j&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">enumerate&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">detcls&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Graph digitization function, only when mode=&amp;#39;graphs&amp;#39;. Plots a graph&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">name_dict&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">==&lt;/span> &lt;span class="s1">&amp;#39;HR_W&amp;#39;&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">confidence&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">name_dict&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">]]&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">detconf&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">]:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">mode&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="s1">&amp;#39;graph&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">hr_graph&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">seg&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">detxy&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]:&lt;/span>&lt;span class="n">detxy&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">detxy&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]:&lt;/span> &lt;span class="n">detxy&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">]]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">digitize&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">hr_graph&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Default case, returns dictionary with detected values&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">elif&lt;/span> &lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">name_dict&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="s1">&amp;#39;HR_W&amp;#39;&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">confidence&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">name_dict&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">]]&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">detconf&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">]:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">bb&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">seg&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">detxy&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]:&lt;/span>&lt;span class="n">detxy&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">detxy&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]:&lt;/span> &lt;span class="n">detxy&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">]]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Get OCR result&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ocrres&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ocr&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ocr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">bb&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="bp">cls&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">det&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">False&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">rec&lt;/span>&lt;span class="o">=&lt;/span> &lt;span class="kc">True&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">procres&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">ocrres&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">confidence&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">name_dict&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">]]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">detconf&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">ocrres&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="mf">0.6&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Process OCR result to correct some faults&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pred&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">char&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">procres&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">ord&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">char&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">&amp;gt;=&lt;/span>&lt;span class="nb">ord&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;0&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="nb">ord&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">char&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">&amp;lt;=&lt;/span>&lt;span class="nb">ord&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;9&amp;#39;&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pred&lt;/span>&lt;span class="o">+=&lt;/span>&lt;span class="n">char&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">char&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="s1">&amp;#39;A&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pred&lt;/span>&lt;span class="o">+=&lt;/span>&lt;span class="s1">&amp;#39;4&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">char&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="s1">&amp;#39;T&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pred&lt;/span>&lt;span class="o">+=&lt;/span>&lt;span class="s1">&amp;#39;7&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">char&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="s1">&amp;#39;O&amp;#39;&lt;/span>&lt;span class="ow">or&lt;/span> &lt;span class="n">char&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="s1">&amp;#39;o&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pred&lt;/span>&lt;span class="o">+=&lt;/span>&lt;span class="s1">&amp;#39;0&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="bp">self&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">name_dict&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">]]&lt;/span>&lt;span class="o">=&lt;/span> &lt;span class="n">pred&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Applying checks to correct common faults&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">try&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">!=&lt;/span>&lt;span class="kc">None&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">try&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">])&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="mi">50&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">],&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;RR&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;RR&amp;#39;&lt;/span>&lt;span class="p">],&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">except&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">None&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">else&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;RR&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">!=&lt;/span>&lt;span class="kc">None&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;RR&amp;#39;&lt;/span>&lt;span class="p">])&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="mi">50&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">],&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;RR&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;RR&amp;#39;&lt;/span>&lt;span class="p">],&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SPO2&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">!=&lt;/span> &lt;span class="kc">None&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">try&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">])&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="mi">50&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;1&amp;#39;&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">except&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">None&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">!=&lt;/span> &lt;span class="kc">None&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;DBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">!=&lt;/span>&lt;span class="kc">None&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">try&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;DBP&amp;#39;&lt;/span>&lt;span class="p">])&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;SBP&amp;#39;&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="ow">and&lt;/span> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;DBP&amp;#39;&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="s1">&amp;#39;1&amp;#39;&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;DBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;DBP&amp;#39;&lt;/span>&lt;span class="p">][&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">:]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">except&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">labels&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s1">&amp;#39;DBP&amp;#39;&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">None&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">except&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">pass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="n">labels&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># HR Graph Digitization Function&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">def&lt;/span> &lt;span class="nf">digitize&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="bp">self&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># convert the input image to grayscale&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">gray&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cvtColor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">COLOR_BGR2GRAY&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># apply thresholding to convert grayscale to binary image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ret&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">thresh&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">threshold&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">gray&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">120&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">255&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># convert BGR to RGB to display using matplotlib&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">imgRGB&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">cvtColor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">img&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">cv&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">COLOR_BGR2RGB&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="c1"># display Original, Grayscale and Binary Images&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">Npixels_rate&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">Npixels_time&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thresh&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">#Selecting the longest chain of connected components&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">length_subarray&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">col&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">Npixels_rate&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">length_subarray&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">where&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thresh&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">col&lt;/span>&lt;span class="p">,:]&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mi">255&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">max_index&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">max&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">i&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">max_index&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="p">]):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">min_val&lt;/span>&lt;span class="o">=&lt;/span> &lt;span class="nb">min&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="n">max_index&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">min_index&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">index&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">min&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="n">max_index&lt;/span>&lt;span class="p">]))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">new_length_subarray&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">j&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">min_index&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">new_length_subarray&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">length_subarray&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">j&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">thresh_crop&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">thresh&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="n">min_index&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="n">i&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="n">Npixels_time&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">new_rate&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">new_time&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">shape&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thresh_crop&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">#Extract the time series (not the scale bars) by starting in the first column&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">col_in_time_series&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="kc">False&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">s1rate_pixelss&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="p">[]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">col&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">col&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="nb">range&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">Npixels_time&lt;/span>&lt;span class="p">):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">where&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thresh_crop&lt;/span>&lt;span class="p">[:,&lt;/span>&lt;span class="n">col&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mi">255&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]):&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">s1rate_pixelss&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">mean&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">where&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">thresh_crop&lt;/span>&lt;span class="p">[:,&lt;/span>&lt;span class="n">col&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="mi">255&lt;/span>&lt;span class="p">)[&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">s1rate_pixelss&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">array&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">s1rate_pixelss&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Visualize time series&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">figure&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">figsize&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">12&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mf">3.8&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">s1rate_pixelss&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="s1">&amp;#39;k&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">xlim&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">Npixels_time&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ylim&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="n">new_rate&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">xlabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Time (pixels)&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">size&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">20&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ylabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Heart rate Voltage(pixels)&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">size&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">20&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Time Series Signal of HR&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">grid&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Scaling the heart rate voltage&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">s1rate&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">s1rate_pixelss&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mf">0.2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Convert time from pixels to ms&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">pixels&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">np&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">arange&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">s1rate_pixelss&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">t&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pixels&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mf">0.02&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1"># Visualize re-scaled time series&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">figure&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">figsize&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">12&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">plot&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">s1rate&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="s1">&amp;#39;k&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">linewidth&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">gca&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">invert_yaxis&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">title&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Scaled Time Series Signal of HR&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">xlabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Time (sec)&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">size&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">20&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">ylabel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;Heart rate Voltage (mV)&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="n">size&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">20&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">plt&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">grid&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="how-to-use">How to Use:&lt;/h1>
+&lt;p>First, create an object as follows (Run the below cell) :&lt;/p>
+&lt;p>This step will take some time, it will load the weights and download weights for the OCR model.
+Add the model files from the zip, and upload to colab.&lt;/p>
+&lt;p>Then add the filepaths.&lt;/p>
+&lt;p>seg_path should contain the path to the weights of the segmentation model.&lt;/p>
+&lt;p>det_path should contain the path to the weights of the detection model.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">seg_path&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">det_path&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Initialize object&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">extr&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">extraction&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">seg_path&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">det_path&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">Namespace(benchmark=False, cls_batch_num=6, cls_image_shape=&amp;#39;3, 48, 192&amp;#39;, cls_model_dir=&amp;#39;/root/.paddleocr/2.2/ocr/cls/ch_ppocr_mobile_v2.0_cls_infer&amp;#39;, cls_thresh=0.9, cpu_threads=10, det=True, det_algorithm=&amp;#39;DB&amp;#39;, det_db_box_thresh=0.5, det_db_score_mode=&amp;#39;fast&amp;#39;, det_db_thresh=0.3, det_db_unclip_ratio=1.6, det_east_cover_thresh=0.1, det_east_nms_thresh=0.2, det_east_score_thresh=0.8, det_limit_side_len=960, det_limit_type=&amp;#39;max&amp;#39;, det_model_dir=&amp;#39;/root/.paddleocr/2.2/ocr/det/en/en_ppocr_mobile_v2.0_det_infer&amp;#39;, det_sast_nms_thresh=0.2, det_sast_polygon=False, det_sast_score_thresh=0.5, drop_score=0.5, e2e_algorithm=&amp;#39;PGNet&amp;#39;, e2e_char_dict_path=&amp;#39;./ppocr/utils/ic15_dict.txt&amp;#39;, e2e_limit_side_len=768, e2e_limit_type=&amp;#39;max&amp;#39;, e2e_model_dir=None, e2e_pgnet_mode=&amp;#39;fast&amp;#39;, e2e_pgnet_polygon=True, e2e_pgnet_score_thresh=0.5, e2e_pgnet_valid_set=&amp;#39;totaltext&amp;#39;, enable_mkldnn=False, gpu_mem=500, help=&amp;#39;==SUPPRESS==&amp;#39;, image_dir=None, ir_optim=True, label_list=[&amp;#39;0&amp;#39;, &amp;#39;180&amp;#39;], lang=&amp;#39;en&amp;#39;, layout_path_model=&amp;#39;lp://PubLayNet/ppyolov2_r50vd_dcn_365e_publaynet/config&amp;#39;, max_batch_size=10, max_text_length=25, min_subgraph_size=10, output=&amp;#39;./output/table&amp;#39;, precision=&amp;#39;fp32&amp;#39;, process_id=0, rec=True, rec_algorithm=&amp;#39;CRNN&amp;#39;, rec_batch_num=6, rec_char_dict_path=&amp;#39;/usr/local/lib/python3.8/dist-packages/paddleocr/ppocr/utils/en_dict.txt&amp;#39;, rec_char_type=&amp;#39;ch&amp;#39;, rec_image_shape=&amp;#39;3, 32, 320&amp;#39;, rec_model_dir=&amp;#39;/root/.paddleocr/2.2/ocr/rec/en/en_number_mobile_v2.0_rec_infer&amp;#39;, save_log_path=&amp;#39;./log_output/&amp;#39;, show_log=True, table_char_dict_path=None, table_char_type=&amp;#39;en&amp;#39;, table_max_len=488, table_model_dir=None, total_process_num=1, type=&amp;#39;ocr&amp;#39;, use_angle_cls=True, use_dilation=False, use_gpu=True, use_mp=False, use_pdserving=False, use_space_char=True, use_tensorrt=False, vis_font_path=&amp;#39;./doc/fonts/simfang.ttf&amp;#39;, warmup=True)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Then, call the labels inference function as follows:&lt;/p>
+&lt;p>(Imgpath is the path to the image. You can also input a numpy array.)&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="n">Imgpath&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">results&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">extr&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">inference&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Imgpath&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">mode&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;labels&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>If mode =&amp;lsquo;labels&amp;rsquo;, the inference function returns a dictionary with the detected labels.&lt;/p>
+&lt;p>If mode = &amp;lsquo;graph&amp;rsquo;, the inference function also displays the digitized HR graph while returning a dictionary. (Inference times may be slightly higher)&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Display Results&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">results&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">{&amp;#39;SPO2&amp;#39;: &amp;#39;100&amp;#39;, &amp;#39;SBP&amp;#39;: &amp;#39;104&amp;#39;, &amp;#39;HR&amp;#39;: &amp;#39;62&amp;#39;, &amp;#39;DBP&amp;#39;: &amp;#39;79&amp;#39;, &amp;#39;MAP&amp;#39;: &amp;#39;88&amp;#39;, &amp;#39;RR&amp;#39;: &amp;#39;12&amp;#39;}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Graph mode shows a graph and returns a dictionary&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">graph_mode&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">extr&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">inference&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Imgpath&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">mode&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;graph&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">graph_mode&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">{&amp;#39;SPO2&amp;#39;: &amp;#39;100&amp;#39;, &amp;#39;SBP&amp;#39;: &amp;#39;104&amp;#39;, &amp;#39;HR&amp;#39;: &amp;#39;62&amp;#39;, &amp;#39;DBP&amp;#39;: &amp;#39;79&amp;#39;, &amp;#39;MAP&amp;#39;: &amp;#39;88&amp;#39;, &amp;#39;RR&amp;#39;: &amp;#39;12&amp;#39;}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>
+&lt;figure >
+&lt;div class="d-flex justify-content-center">
+&lt;div class="w-100" >&lt;img src="./index_19_1.png" alt="png" loading="lazy" data-zoomable />&lt;/div>
+&lt;/div>&lt;/figure>
+&lt;/p>
+&lt;p>
+&lt;figure >
+&lt;div class="d-flex justify-content-center">
+&lt;div class="w-100" >&lt;img src="./index_19_2.png" alt="png" loading="lazy" data-zoomable />&lt;/div>
+&lt;/div>&lt;/figure>
+&lt;/p></description></item><item><title>Writing technical content in Markdown</title><link>https://madhaviit.github.io/post/writing-technical-content/</link><pubDate>Fri, 12 Jul 2019 00:00:00 +0000</pubDate><guid>https://madhaviit.github.io/post/writing-technical-content/</guid><description>&lt;p>Wowchemy is designed to give technical content creators a seamless experience. You can focus on the content and Wowchemy handles the rest.&lt;/p>
+&lt;p>&lt;strong>Highlight your code snippets, take notes on math classes, and draw diagrams from textual representation.&lt;/strong>&lt;/p>
+&lt;p>On this page, you&amp;rsquo;ll find some examples of the types of technical content that can be rendered with Wowchemy.&lt;/p>
+&lt;h2 id="examples">Examples&lt;/h2>
+&lt;h3 id="code">Code&lt;/h3>
+&lt;p>Wowchemy supports a Markdown extension for highlighting code syntax. You can customize the styles under the &lt;code>syntax_highlighter&lt;/code> option in your &lt;code>config/_default/params.yaml&lt;/code> file.&lt;/p>
+&lt;pre>&lt;code>```python
+import pandas as pd
+data = pd.read_csv(&amp;quot;data.csv&amp;quot;)
+data.head()
+```
+&lt;/code>&lt;/pre>
+&lt;p>renders as&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">pandas&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">pd&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">data&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">pd&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">read_csv&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;data.csv&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">data&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">head&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="mindmaps">Mindmaps&lt;/h3>
+&lt;p>Wowchemy supports a Markdown extension for mindmaps.&lt;/p>
+&lt;p>Simply insert a Markdown &lt;code>markmap&lt;/code> code block and optionally set the height of the mindmap as shown in the example below.&lt;/p>
+&lt;p>A simple mindmap defined as a Markdown list:&lt;/p>
+&lt;div class="highlight">
+&lt;pre class="chroma">
+&lt;code>
+```markmap {height="200px"}
+- Hugo Modules
+- wowchemy
+- wowchemy-plugins-netlify
+- wowchemy-plugins-netlify-cms
+- wowchemy-plugins-reveal
+```
+&lt;/code>
+&lt;/pre>
+&lt;/div>
+&lt;p>renders as&lt;/p>
+&lt;div class="markmap" style="height: 200px;">
+&lt;pre>- Hugo Modules
+- wowchemy
+- wowchemy-plugins-netlify
+- wowchemy-plugins-netlify-cms
+- wowchemy-plugins-reveal&lt;/pre>
+&lt;/div>
+&lt;p>A more advanced mindmap with formatting, code blocks, and math:&lt;/p>
+&lt;div class="highlight">
+&lt;pre class="chroma">
+&lt;code>
+```markmap
+- Mindmaps
+- Links
+- [Wowchemy Docs](https://wowchemy.com/docs/)
+- [Discord Community](https://discord.gg/z8wNYzb)
+- [GitHub](https://github.com/wowchemy/wowchemy-hugo-themes)
+- Features
+- Markdown formatting
+- **inline** ~~text~~ *styles*
+- multiline
+text
+- `inline code`
+-
+```js
+console.log('hello');
+console.log('code block');
+```
+- Math: $x = {-b \pm \sqrt{b^2-4ac} \over 2a}$
+```
+&lt;/code>
+&lt;/pre>
+&lt;/div>
+&lt;p>renders as&lt;/p>
+&lt;div class="markmap" style="height: 500px;">
+&lt;pre>- Mindmaps
+- Links
+- [Wowchemy Docs](https://wowchemy.com/docs/)
+- [Discord Community](https://discord.gg/z8wNYzb)
+- [GitHub](https://github.com/wowchemy/wowchemy-hugo-themes)
+- Features
+- Markdown formatting
+- **inline** ~~text~~ *styles*
+- multiline
+text
+- `inline code`
+-
+```js
+console.log('hello');
+console.log('code block');
+```
+- Math: $x = {-b \pm \sqrt{b^2-4ac} \over 2a}$&lt;/pre>
+&lt;/div>
+&lt;h3 id="charts">Charts&lt;/h3>
+&lt;p>Wowchemy supports the popular &lt;a href="https://plot.ly/" target="_blank" rel="noopener">Plotly&lt;/a> format for interactive charts.&lt;/p>
+&lt;p>Save your Plotly JSON in your page folder, for example &lt;code>line-chart.json&lt;/code>, and then add the &lt;code>{{&amp;lt; chart data=&amp;quot;line-chart&amp;quot; &amp;gt;}}&lt;/code> shortcode where you would like the chart to appear.&lt;/p>
+&lt;p>Demo:&lt;/p>
+&lt;div id="chart-852469137" class="chart">&lt;/div>
+&lt;script>
+(function() {
+let a = setInterval( function() {
+if ( typeof window.Plotly === 'undefined' ) {
+return;
+}
+clearInterval( a );
+Plotly.d3.json("./line-chart.json", function(chart) {
+Plotly.plot('chart-852469137', chart.data, chart.layout, {responsive: true});
+});
+}, 500 );
+})();
+&lt;/script>
+&lt;p>You might also find the &lt;a href="http://plotly-json-editor.getforge.io/" target="_blank" rel="noopener">Plotly JSON Editor&lt;/a> useful.&lt;/p>
+&lt;h3 id="math">Math&lt;/h3>
+&lt;p>Wowchemy supports a Markdown extension for $\LaTeX$ math. You can enable this feature by toggling the &lt;code>math&lt;/code> option in your &lt;code>config/_default/params.yaml&lt;/code> file.&lt;/p>
+&lt;p>To render &lt;em>inline&lt;/em> or &lt;em>block&lt;/em> math, wrap your LaTeX math with &lt;code>{{&amp;lt; math &amp;gt;}}$...${{&amp;lt; /math &amp;gt;}}&lt;/code> or &lt;code>{{&amp;lt; math &amp;gt;}}$$...$${{&amp;lt; /math &amp;gt;}}&lt;/code>, respectively. (We wrap the LaTeX math in the Wowchemy &lt;em>math&lt;/em> shortcode to prevent Hugo rendering our math as Markdown. The &lt;em>math&lt;/em> shortcode is new in v5.5-dev.)&lt;/p>
+&lt;p>Example &lt;strong>math block&lt;/strong>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-latex" data-lang="latex">&lt;span class="line">&lt;span class="cl">&lt;span class="nb">{{&lt;/span>&amp;lt; math &amp;gt;&lt;span class="nb">}}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sb">$$&lt;/span>&lt;span class="nb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">&lt;/span>&lt;span class="nv">\gamma&lt;/span>&lt;span class="nb">_{n} &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="nv">\frac&lt;/span>&lt;span class="nb">{ &lt;/span>&lt;span class="nv">\left&lt;/span>&lt;span class="nb"> | &lt;/span>&lt;span class="nv">\left&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="o">(&lt;/span>&lt;span class="nv">\mathbf&lt;/span>&lt;span class="nb"> x_{n} &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="nv">\mathbf&lt;/span>&lt;span class="nb"> x_{n&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="m">1&lt;/span>&lt;span class="nb">} &lt;/span>&lt;span class="nv">\right&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="o">)&lt;/span>&lt;span class="nb">^T &lt;/span>&lt;span class="nv">\left&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="o">[&lt;/span>&lt;span class="nv">\nabla&lt;/span>&lt;span class="nb"> F &lt;/span>&lt;span class="o">(&lt;/span>&lt;span class="nv">\mathbf&lt;/span>&lt;span class="nb"> x_{n}&lt;/span>&lt;span class="o">)&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="nv">\nabla&lt;/span>&lt;span class="nb"> F &lt;/span>&lt;span class="o">(&lt;/span>&lt;span class="nv">\mathbf&lt;/span>&lt;span class="nb"> x_{n&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="m">1&lt;/span>&lt;span class="nb">}&lt;/span>&lt;span class="o">)&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="nv">\right&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="o">]&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="nv">\right&lt;/span>&lt;span class="nb"> |}{&lt;/span>&lt;span class="nv">\left&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="nv">\|\nabla&lt;/span>&lt;span class="nb"> F&lt;/span>&lt;span class="o">(&lt;/span>&lt;span class="nv">\mathbf&lt;/span>&lt;span class="nb">{x}_{n}&lt;/span>&lt;span class="o">)&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="nv">\nabla&lt;/span>&lt;span class="nb"> F&lt;/span>&lt;span class="o">(&lt;/span>&lt;span class="nv">\mathbf&lt;/span>&lt;span class="nb">{x}_{n&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="m">1&lt;/span>&lt;span class="nb">}&lt;/span>&lt;span class="o">)&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="nv">\right&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="nv">\|&lt;/span>&lt;span class="nb">^&lt;/span>&lt;span class="m">2&lt;/span>&lt;span class="nb">}
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">&lt;/span>&lt;span class="s">$$&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">{{&lt;/span>&amp;lt; /math &amp;gt;&lt;span class="nb">}}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>renders as&lt;/p>
+$$\gamma_{n} = \frac{ \left | \left (\mathbf x_{n} - \mathbf x_{n-1} \right )^T \left [\nabla F (\mathbf x_{n}) - \nabla F (\mathbf x_{n-1}) \right ] \right |}{\left \|\nabla F(\mathbf{x}_{n}) - \nabla F(\mathbf{x}_{n-1}) \right \|^2}$$
+&lt;p>Example &lt;strong>inline math&lt;/strong> &lt;code>{{&amp;lt; math &amp;gt;}}$\nabla F(\mathbf{x}_{n})${{&amp;lt; /math &amp;gt;}}&lt;/code> renders as
+$\nabla F(\mathbf{x}_{n})$.&lt;/p>
+&lt;p>Example &lt;strong>multi-line math&lt;/strong> using the math linebreak (&lt;code>\\&lt;/code>):&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-latex" data-lang="latex">&lt;span class="line">&lt;span class="cl">&lt;span class="nb">{{&lt;/span>&amp;lt; math &amp;gt;&lt;span class="nb">}}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sb">$$&lt;/span>&lt;span class="nb">f&lt;/span>&lt;span class="o">(&lt;/span>&lt;span class="nb">k;p_{&lt;/span>&lt;span class="m">0&lt;/span>&lt;span class="nb">}^{&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nb">}&lt;/span>&lt;span class="o">)&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="nb"> &lt;/span>&lt;span class="nv">\begin&lt;/span>&lt;span class="nb">{cases}p_{&lt;/span>&lt;span class="m">0&lt;/span>&lt;span class="nb">}^{&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nb">} &amp;amp; &lt;/span>&lt;span class="nv">\text&lt;/span>&lt;span class="nb">{if }k&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="m">1&lt;/span>&lt;span class="nb">, &lt;/span>&lt;span class="nv">\\&lt;/span>&lt;span class="nb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">&lt;/span>&lt;span class="m">1&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="nb">p_{&lt;/span>&lt;span class="m">0&lt;/span>&lt;span class="nb">}^{&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nb">} &amp;amp; &lt;/span>&lt;span class="nv">\text&lt;/span>&lt;span class="nb">{if }k&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="m">0&lt;/span>&lt;span class="nb">.&lt;/span>&lt;span class="nv">\end&lt;/span>&lt;span class="nb">{cases}&lt;/span>&lt;span class="s">$$&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">{{&lt;/span>&amp;lt; /math &amp;gt;&lt;span class="nb">}}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>renders as&lt;/p>
+$$
+f(k;p_{0}^{*}) = \begin{cases}p_{0}^{*} &amp; \text{if }k=1, \\
+1-p_{0}^{*} &amp; \text{if }k=0.\end{cases}
+$$
+&lt;h3 id="diagrams">Diagrams&lt;/h3>
+&lt;p>Wowchemy supports a Markdown extension for diagrams. You can enable this feature by toggling the &lt;code>diagram&lt;/code> option in your &lt;code>config/_default/params.toml&lt;/code> file or by adding &lt;code>diagram: true&lt;/code> to your page front matter.&lt;/p>
+&lt;p>An example &lt;strong>flowchart&lt;/strong>:&lt;/p>
+&lt;pre>&lt;code>```mermaid
+graph TD
+A[Hard] --&amp;gt;|Text| B(Round)
+B --&amp;gt; C{Decision}
+C --&amp;gt;|One| D[Result 1]
+C --&amp;gt;|Two| E[Result 2]
+```
+&lt;/code>&lt;/pre>
+&lt;p>renders as&lt;/p>
+&lt;div class="mermaid">graph TD
+A[Hard] -->|Text| B(Round)
+B --> C{Decision}
+C -->|One| D[Result 1]
+C -->|Two| E[Result 2]
+&lt;/div>
+&lt;p>An example &lt;strong>sequence diagram&lt;/strong>:&lt;/p>
+&lt;pre>&lt;code>```mermaid
+sequenceDiagram
+Alice-&amp;gt;&amp;gt;John: Hello John, how are you?
+loop Healthcheck
+John-&amp;gt;&amp;gt;John: Fight against hypochondria
+end
+Note right of John: Rational thoughts!
+John--&amp;gt;&amp;gt;Alice: Great!
+John-&amp;gt;&amp;gt;Bob: How about you?
+Bob--&amp;gt;&amp;gt;John: Jolly good!
+```
+&lt;/code>&lt;/pre>
+&lt;p>renders as&lt;/p>
+&lt;div class="mermaid">sequenceDiagram
+Alice->>John: Hello John, how are you?
+loop Healthcheck
+John->>John: Fight against hypochondria
+end
+Note right of John: Rational thoughts!
+John-->>Alice: Great!
+John->>Bob: How about you?
+Bob-->>John: Jolly good!
+&lt;/div>
+&lt;p>An example &lt;strong>Gantt diagram&lt;/strong>:&lt;/p>
+&lt;pre>&lt;code>```mermaid
+gantt
+section Section
+Completed :done, des1, 2014-01-06,2014-01-08
+Active :active, des2, 2014-01-07, 3d
+Parallel 1 : des3, after des1, 1d
+Parallel 2 : des4, after des1, 1d
+Parallel 3 : des5, after des3, 1d
+Parallel 4 : des6, after des4, 1d
+```
+&lt;/code>&lt;/pre>
+&lt;p>renders as&lt;/p>
+&lt;div class="mermaid">gantt
+section Section
+Completed :done, des1, 2014-01-06,2014-01-08
+Active :active, des2, 2014-01-07, 3d
+Parallel 1 : des3, after des1, 1d
+Parallel 2 : des4, after des1, 1d
+Parallel 3 : des5, after des3, 1d
+Parallel 4 : des6, after des4, 1d
+&lt;/div>
+&lt;p>An example &lt;strong>class diagram&lt;/strong>:&lt;/p>
+&lt;pre>&lt;code>```mermaid
+classDiagram
+Class01 &amp;lt;|-- AveryLongClass : Cool
+Class03 *-- Class04
+Class05 o-- Class06
+Class07 .. Class08
+Class09 --&amp;gt; C2 : Where am i?
+Class09 --* C3
+Class09 --|&amp;gt; Class07
+Class07 : equals()
+Class07 : Object[] elementData
+Class01 : size()
+Class01 : int chimp
+Class01 : int gorilla
+Class08 &amp;lt;--&amp;gt; C2: Cool label
+```
+&lt;/code>&lt;/pre>
+&lt;p>renders as&lt;/p>
+&lt;div class="mermaid">classDiagram
+Class01 &lt;|-- AveryLongClass : Cool
+Class03 *-- Class04
+Class05 o-- Class06
+Class07 .. Class08
+Class09 --> C2 : Where am i?
+Class09 --* C3
+Class09 --|> Class07
+Class07 : equals()
+Class07 : Object[] elementData
+Class01 : size()
+Class01 : int chimp
+Class01 : int gorilla
+Class08 &lt;--> C2: Cool label
+&lt;/div>
+&lt;p>An example &lt;strong>state diagram&lt;/strong>:&lt;/p>
+&lt;pre>&lt;code>```mermaid
+stateDiagram
+[*] --&amp;gt; Still
+Still --&amp;gt; [*]
+Still --&amp;gt; Moving
+Moving --&amp;gt; Still
+Moving --&amp;gt; Crash
+Crash --&amp;gt; [*]
+```
+&lt;/code>&lt;/pre>
+&lt;p>renders as&lt;/p>
+&lt;div class="mermaid">stateDiagram
+[*] --> Still
+Still --> [*]
+Still --> Moving
+Moving --> Still
+Moving --> Crash
+Crash --> [*]
+&lt;/div>
+&lt;h3 id="todo-lists">Todo lists&lt;/h3>
+&lt;p>You can even write your todo lists in Markdown too:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-markdown" data-lang="markdown">&lt;span class="line">&lt;span class="cl">&lt;span class="k">- [x]&lt;/span> Write math example
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">- [x]&lt;/span> Write diagram example
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">- [ ]&lt;/span> Do something else
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>renders as&lt;/p>
+&lt;ul>
+&lt;li>&lt;input checked="" disabled="" type="checkbox"> Write math example
+&lt;ul>
+&lt;li>&lt;input checked="" disabled="" type="checkbox"> Write diagram example&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Do something else&lt;/li>
+&lt;/ul>
+&lt;h3 id="tables">Tables&lt;/h3>
+&lt;p>Save your spreadsheet as a CSV file in your page&amp;rsquo;s folder and then render it by adding the &lt;em>Table&lt;/em> shortcode to your page:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="p">{{&amp;lt;&lt;/span> &lt;span class="nx">table&lt;/span> &lt;span class="nx">path&lt;/span>&lt;span class="p">=&lt;/span>&lt;span class="s">&amp;#34;results.csv&amp;#34;&lt;/span> &lt;span class="nx">header&lt;/span>&lt;span class="p">=&lt;/span>&lt;span class="s">&amp;#34;true&amp;#34;&lt;/span> &lt;span class="nx">caption&lt;/span>&lt;span class="p">=&lt;/span>&lt;span class="s">&amp;#34;Table 1: My results&amp;#34;&lt;/span> &lt;span class="p">&amp;gt;}}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>renders as&lt;/p>
+&lt;table class="table">
+&lt;tr> &lt;th>customer_id&lt;/th> &lt;th>score&lt;/th> &lt;/tr>
+&lt;tr>
+&lt;td data-table-dtype="number">1&lt;/td>
+&lt;td data-table-dtype="number">0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td data-table-dtype="number">2&lt;/td>
+&lt;td data-table-dtype="text">0.5&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td data-table-dtype="number">3&lt;/td>
+&lt;td data-table-dtype="number">1&lt;/td>
+&lt;/tr>
+&lt;caption>Table 1: My results&lt;/caption>
+&lt;/table>
+&lt;h3 id="callouts">Callouts&lt;/h3>
+&lt;p>Academic supports a &lt;a href="https://wowchemy.com/docs/content/writing-markdown-latex/#callouts" target="_blank" rel="noopener">shortcode for callouts&lt;/a>, also referred to as &lt;em>asides&lt;/em>, &lt;em>hints&lt;/em>, or &lt;em>alerts&lt;/em>. By wrapping a paragraph in &lt;code>{{% callout note %}} ... {{% /callout %}}&lt;/code>, it will render as an aside.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-markdown" data-lang="markdown">&lt;span class="line">&lt;span class="cl">{{% callout note %}}
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">A Markdown aside is useful for displaying notices, hints, or definitions to your readers.
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">{{% /callout %}}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>renders as&lt;/p>
+&lt;div class="alert alert-note">
+&lt;div>
+A Markdown aside is useful for displaying notices, hints, or definitions to your readers.
+&lt;/div>
+&lt;/div>
+&lt;h3 id="spoilers">Spoilers&lt;/h3>
+&lt;p>Add a spoiler to a page to reveal text, such as an answer to a question, after a button is clicked.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-markdown" data-lang="markdown">&lt;span class="line">&lt;span class="cl">{{&lt;span class="p">&amp;lt;&lt;/span> &lt;span class="nt">spoiler&lt;/span> &lt;span class="na">text&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s">&amp;#34;Click to view the spoiler&amp;#34;&lt;/span> &lt;span class="p">&amp;gt;&lt;/span>}}
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">You found me!
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">{{&lt;span class="p">&amp;lt;&lt;/span> &lt;span class="p">/&lt;/span>&lt;span class="nt">spoiler&lt;/span> &lt;span class="p">&amp;gt;&lt;/span>}}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>renders as&lt;/p>
+&lt;details class="spoiler " id="spoiler-6">
+&lt;summary>Click to view the spoiler&lt;/summary>
+&lt;p>You found me!&lt;/p>
+&lt;/details>
+&lt;h3 id="icons">Icons&lt;/h3>
+&lt;p>Academic enables you to use a wide range of &lt;a href="https://wowchemy.com/docs/getting-started/page-builder/#icons" target="_blank" rel="noopener">icons from &lt;em>Font Awesome&lt;/em> and &lt;em>Academicons&lt;/em>&lt;/a> in addition to &lt;a href="https://wowchemy.com/docs/content/writing-markdown-latex/#emojis" target="_blank" rel="noopener">emojis&lt;/a>.&lt;/p>
+&lt;p>Here are some examples using the &lt;code>icon&lt;/code> shortcode to render icons:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-markdown" data-lang="markdown">&lt;span class="line">&lt;span class="cl">{{&lt;span class="p">&amp;lt;&lt;/span> &lt;span class="nt">icon&lt;/span> &lt;span class="na">name&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s">&amp;#34;terminal&amp;#34;&lt;/span> &lt;span class="na">pack&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s">&amp;#34;fas&amp;#34;&lt;/span> &lt;span class="p">&amp;gt;&lt;/span>}} Terminal
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">{{&lt;span class="p">&amp;lt;&lt;/span> &lt;span class="nt">icon&lt;/span> &lt;span class="na">name&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s">&amp;#34;python&amp;#34;&lt;/span> &lt;span class="na">pack&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s">&amp;#34;fab&amp;#34;&lt;/span> &lt;span class="p">&amp;gt;&lt;/span>}} Python
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">{{&lt;span class="p">&amp;lt;&lt;/span> &lt;span class="nt">icon&lt;/span> &lt;span class="na">name&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s">&amp;#34;r-project&amp;#34;&lt;/span> &lt;span class="na">pack&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s">&amp;#34;fab&amp;#34;&lt;/span> &lt;span class="p">&amp;gt;&lt;/span>}} R
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>renders as&lt;/p>
+&lt;p>
+&lt;i class="fas fa-terminal pr-1 fa-fw">&lt;/i> Terminal&lt;br>
+&lt;i class="fab fa-python pr-1 fa-fw">&lt;/i> Python&lt;br>
+&lt;i class="fab fa-r-project pr-1 fa-fw">&lt;/i> R&lt;/p>
+&lt;h3 id="did-you-find-this-page-helpful-consider-sharing-it-">Did you find this page helpful? Consider sharing it 🙌&lt;/h3></description></item><item><title>Display Jupyter Notebooks with Academic</title><link>https://madhaviit.github.io/post/jupyter/</link><pubDate>Tue, 05 Feb 2019 00:00:00 +0000</pubDate><guid>https://madhaviit.github.io/post/jupyter/</guid><description>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">IPython.core.display&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">Image&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">Image&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;https://www.python.org/static/community_logos/python-logo-master-v3-TM-flattened.png&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>
+&lt;figure >
+&lt;div class="d-flex justify-content-center">
+&lt;div class="w-100" >&lt;img src="./index_1_0.png" alt="png" loading="lazy" data-zoomable />&lt;/div>
+&lt;/div>&lt;/figure>
+&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="nb">print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;Welcome to Academic!&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;pre>&lt;code>Welcome to Academic!
+&lt;/code>&lt;/pre>
+&lt;h2 id="install-python-and-jupyterlab">Install Python and JupyterLab&lt;/h2>
+&lt;p>&lt;a href="https://www.anaconda.com/distribution/#download-section" target="_blank" rel="noopener">Install Anaconda&lt;/a> which includes Python 3 and JupyterLab.&lt;/p>
+&lt;p>Alternatively, install JupyterLab with &lt;code>pip3 install jupyterlab&lt;/code>.&lt;/p>
+&lt;h2 id="create-or-upload-a-jupyter-notebook">Create or upload a Jupyter notebook&lt;/h2>
+&lt;p>Run the following commands in your Terminal, substituting &lt;code>&amp;lt;MY-WEBSITE-FOLDER&amp;gt;&lt;/code> and &lt;code>&amp;lt;SHORT-POST-TITLE&amp;gt;&lt;/code> with the file path to your Academic website folder and a short title for your blog post (use hyphens instead of spaces), respectively:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">mkdir -p &amp;lt;MY-WEBSITE-FOLDER&amp;gt;/content/post/&amp;lt;SHORT-POST-TITLE&amp;gt;/
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">cd&lt;/span> &amp;lt;MY-WEBSITE-FOLDER&amp;gt;/content/post/&amp;lt;SHORT-POST-TITLE&amp;gt;/
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">jupyter lab index.ipynb
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The &lt;code>jupyter&lt;/code> command above will launch the JupyterLab editor, allowing us to add Academic metadata and write the content.&lt;/p>
+&lt;h2 id="edit-your-post-metadata">Edit your post metadata&lt;/h2>
+&lt;p>The first cell of your Jupter notebook will contain your post metadata (&lt;a href="https://sourcethemes.com/academic/docs/front-matter/" target="_blank" rel="noopener">front matter&lt;/a>).&lt;/p>
+&lt;p>In Jupter, choose &lt;em>Markdown&lt;/em> as the type of the first cell and wrap your Academic metadata in three dashes, indicating that it is YAML front matter:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">---
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">title: My post&amp;#39;s title
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">date: 2019-09-01
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"># Put any other Academic metadata here...
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">---
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Edit the metadata of your post, using the &lt;a href="https://sourcethemes.com/academic/docs/managing-content" target="_blank" rel="noopener">documentation&lt;/a> as a guide to the available options.&lt;/p>
+&lt;p>To set a &lt;a href="https://sourcethemes.com/academic/docs/managing-content/#featured-image" target="_blank" rel="noopener">featured image&lt;/a>, place an image named &lt;code>featured&lt;/code> into your post&amp;rsquo;s folder.&lt;/p>
+&lt;p>For other tips, such as using math, see the guide on &lt;a href="https://wowchemy.com/docs/content/writing-markdown-latex/" target="_blank" rel="noopener">writing content with Academic&lt;/a>.&lt;/p>
+&lt;h2 id="convert-notebook-to-markdown">Convert notebook to Markdown&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">jupyter nbconvert index.ipynb --to markdown --NbConvertApp.output_files_dir&lt;span class="o">=&lt;/span>.
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="example">Example&lt;/h2>
+&lt;p>This post was created with Jupyter. The orginal files can be found at &lt;a href="https://github.com/gcushen/hugo-academic/tree/master/exampleSite/content/post/jupyter" target="_blank" rel="noopener">https://github.com/gcushen/hugo-academic/tree/master/exampleSite/content/post/jupyter&lt;/a>&lt;/p></description></item></channel></rss>
