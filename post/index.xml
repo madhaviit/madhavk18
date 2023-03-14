@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts | Academic</title><link>https://madhaviit.github.io/post/</link><atom:link href="https://madhaviit.github.io/post/index.xml" rel="self" type="application/rss+xml"/><description>Posts</description><generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Mon, 13 Mar 2023 10:39:21 +0000</lastBuildDate><image><url>https://madhaviit.github.io/media/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_3.png</url><title>Posts</title><link>https://madhaviit.github.io/post/</link></image><item><title>The Vital Extraction Challenge</title><link>https://madhaviit.github.io/post/the-vital-extraction-challenge/</link><pubDate>Mon, 13 Mar 2023 10:39:21 +0000</pubDate><guid>https://madhaviit.github.io/post/the-vital-extraction-challenge/</guid><description>&lt;h1 id="how-my-team-representing-iit-indore-bagged-an-absolute-gold-medal-in-inter-iit-tech-meet-110-2023-edition-at-iit-kanpur-for-the-mid-prep-the-vital-extraction-challenge-by-cloudphysician">How my team representing IIT Indore bagged an absolute Gold Medal in Inter IIT Tech Meet 11.0 (2023 edition at IIT Kanpur) for the Mid-Prep &amp;ldquo;The Vital Extraction&amp;rdquo; Challenge by Cloudphysician.&lt;/h1>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts | Academic</title><link>https://madhaviit.github.io/madhavk18/post/</link><atom:link href="https://madhaviit.github.io/madhavk18/post/index.xml" rel="self" type="application/rss+xml"/><description>Posts</description><generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Mon, 13 Mar 2023 10:39:21 +0000</lastBuildDate><image><url>https://madhaviit.github.io/madhavk18/media/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_3.png</url><title>Posts</title><link>https://madhaviit.github.io/madhavk18/post/</link></image><item><title>The Vital Extraction Challenge</title><link>https://madhaviit.github.io/madhavk18/post/the-vital-extraction-challenge/</link><pubDate>Mon, 13 Mar 2023 10:39:21 +0000</pubDate><guid>https://madhaviit.github.io/madhavk18/post/the-vital-extraction-challenge/</guid><description>&lt;h1 id="how-my-team-representing-iit-indore-bagged-an-absolute-gold-medal-in-inter-iit-tech-meet-110-2023-edition-at-iit-kanpur-for-the-mid-prep-the-vital-extraction-challenge-by-cloudphysician">How my team representing IIT Indore bagged an absolute Gold Medal in Inter IIT Tech Meet 11.0 (2023 edition at IIT Kanpur) for the Mid-Prep &amp;ldquo;The Vital Extraction&amp;rdquo; Challenge by Cloudphysician.&lt;/h1>
 &lt;h2 id="abstract">Abstract:&lt;/h2>
 &lt;p>The vital extraction challenge aims to extract a patient&amp;rsquo;s vitals from the image of an ICU monitor. Monitoring vitals is critical to providing high-quality care to patients and is essential for ensuring the best possible patient outcomes. While current guidelines state that the nurse-to-patient ratio should be 1:6, various practical issues result in a much worse scenario. This is why it is important to find newer and more efficient solutions to help solve this problem.&lt;/p>
 &lt;p>While it would be preferable to skip the camera-based monitoring system and directly feed the vitals into a common server, we recognize the fact that this solution is not an efficient solution for ICUs around India that are already up and running. There is a need to augment the existing ICU environments in order to capture the necessary vitals from an “offline” patient monitor and feed it into an “online” server for monitoring.&lt;/p>
@@ -204,7 +204,7 @@ The problem with this approach, however, is that this generates a bounding box t
 &lt;div class="d-flex justify-content-center">
 &lt;div class="w-100" >&lt;img src="https://user-images.githubusercontent.com/122287288/217329013-482772e5-eb84-4c75-bac3-116c6434e1e5.png" alt="SSL_fin drawio (1)" loading="lazy" data-zoomable />&lt;/div>
 &lt;/div>&lt;/figure>
-&lt;/p></description></item><item><title>Code for inference in Vitals Extraction Chaallenge</title><link>https://madhaviit.github.io/post/vitals_notebook/</link><pubDate>Sat, 11 Mar 2023 00:00:00 +0000</pubDate><guid>https://madhaviit.github.io/post/vitals_notebook/</guid><description>&lt;h1 id="in-this-notebook-my-team-explains-how-to-use-our-pipeline-for-getting-infernece">In this notebook my team explains how to use our pipeline for getting infernece.&lt;/h1>
+&lt;/p></description></item><item><title>Code for inference in Vitals Extraction Chaallenge</title><link>https://madhaviit.github.io/madhavk18/post/vitals_notebook/</link><pubDate>Sat, 11 Mar 2023 00:00:00 +0000</pubDate><guid>https://madhaviit.github.io/madhavk18/post/vitals_notebook/</guid><description>&lt;h1 id="in-this-notebook-my-team-explains-how-to-use-our-pipeline-for-getting-infernece">In this notebook my team explains how to use our pipeline for getting infernece.&lt;/h1>
 &lt;h1 id="imports-section">Imports Section&lt;/h1>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="err">!&lt;/span>&lt;span class="n">pip&lt;/span> &lt;span class="n">install&lt;/span> &lt;span class="n">ultralytics&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">ultralytics&lt;/span>
@@ -626,7 +626,7 @@ Add the model files from the zip, and upload to colab.&lt;/p>
 &lt;div class="d-flex justify-content-center">
 &lt;div class="w-100" >&lt;img src="./index_19_2.png" alt="png" loading="lazy" data-zoomable />&lt;/div>
 &lt;/div>&lt;/figure>
-&lt;/p></description></item><item><title>Writing technical content in Markdown</title><link>https://madhaviit.github.io/post/writing-technical-content/</link><pubDate>Fri, 12 Jul 2019 00:00:00 +0000</pubDate><guid>https://madhaviit.github.io/post/writing-technical-content/</guid><description>&lt;p>Wowchemy is designed to give technical content creators a seamless experience. You can focus on the content and Wowchemy handles the rest.&lt;/p>
+&lt;/p></description></item><item><title>Writing technical content in Markdown</title><link>https://madhaviit.github.io/madhavk18/post/writing-technical-content/</link><pubDate>Fri, 12 Jul 2019 00:00:00 +0000</pubDate><guid>https://madhaviit.github.io/madhavk18/post/writing-technical-content/</guid><description>&lt;p>Wowchemy is designed to give technical content creators a seamless experience. You can focus on the content and Wowchemy handles the rest.&lt;/p>
 &lt;p>&lt;strong>Highlight your code snippets, take notes on math classes, and draw diagrams from textual representation.&lt;/strong>&lt;/p>
 &lt;p>On this page, you&amp;rsquo;ll find some examples of the types of technical content that can be rendered with Wowchemy.&lt;/p>
 &lt;h2 id="examples">Examples&lt;/h2>
@@ -717,7 +717,7 @@ console.log('code block');
 &lt;p>Wowchemy supports the popular &lt;a href="https://plot.ly/" target="_blank" rel="noopener">Plotly&lt;/a> format for interactive charts.&lt;/p>
 &lt;p>Save your Plotly JSON in your page folder, for example &lt;code>line-chart.json&lt;/code>, and then add the &lt;code>{{&amp;lt; chart data=&amp;quot;line-chart&amp;quot; &amp;gt;}}&lt;/code> shortcode where you would like the chart to appear.&lt;/p>
 &lt;p>Demo:&lt;/p>
-&lt;div id="chart-852469137" class="chart">&lt;/div>
+&lt;div id="chart-892745163" class="chart">&lt;/div>
 &lt;script>
 (function() {
 let a = setInterval( function() {
@@ -726,7 +726,7 @@ return;
 }
 clearInterval( a );
 Plotly.d3.json("./line-chart.json", function(chart) {
-Plotly.plot('chart-852469137', chart.data, chart.layout, {responsive: true});
+Plotly.plot('chart-892745163', chart.data, chart.layout, {responsive: true});
 });
 }, 500 );
 })();
@@ -939,7 +939,7 @@ A Markdown aside is useful for displaying notices, hints, or definitions to your
 &lt;i class="fas fa-terminal pr-1 fa-fw">&lt;/i> Terminal&lt;br>
 &lt;i class="fab fa-python pr-1 fa-fw">&lt;/i> Python&lt;br>
 &lt;i class="fab fa-r-project pr-1 fa-fw">&lt;/i> R&lt;/p>
-&lt;h3 id="did-you-find-this-page-helpful-consider-sharing-it-">Did you find this page helpful? Consider sharing it 🙌&lt;/h3></description></item><item><title>Display Jupyter Notebooks with Academic</title><link>https://madhaviit.github.io/post/jupyter/</link><pubDate>Tue, 05 Feb 2019 00:00:00 +0000</pubDate><guid>https://madhaviit.github.io/post/jupyter/</guid><description>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">IPython.core.display&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">Image&lt;/span>
+&lt;h3 id="did-you-find-this-page-helpful-consider-sharing-it-">Did you find this page helpful? Consider sharing it 🙌&lt;/h3></description></item><item><title>Display Jupyter Notebooks with Academic</title><link>https://madhaviit.github.io/madhavk18/post/jupyter/</link><pubDate>Tue, 05 Feb 2019 00:00:00 +0000</pubDate><guid>https://madhaviit.github.io/madhavk18/post/jupyter/</guid><description>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">IPython.core.display&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">Image&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">Image&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;https://www.python.org/static/community_logos/python-logo-master-v3-TM-flattened.png&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>
 &lt;figure >
